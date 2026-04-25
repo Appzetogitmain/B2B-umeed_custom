@@ -17,7 +17,7 @@ const referralIncome = {
 const transactions = [
   { title: 'Order Payment - ORD-3012', date: 'Today, 10:42 AM', amount: '₹12,450', type: 'debit' },
   { title: 'Cashback Earned', date: 'Yesterday, 07:12 PM', amount: '₹320', type: 'credit' },
-  { title: 'Referral Credit - Level 1', date: '14 Apr 2026', amount: '₹150', type: 'credit' },
+  { title: 'Referral Credit - Tier 1', date: '14 Apr 2026', amount: '₹150', type: 'credit' },
 ]
 
 function Wallet() {
@@ -69,28 +69,28 @@ function Wallet() {
             <div className="h-10 w-10 bg-slate-100 text-black rounded-xl grid place-items-center">
               <Users size={20} />
             </div>
-            <h3 className="font-bold text-[#0F172A] text-lg">Downline Earnings</h3>
+            <h3 className="font-bold text-[#0F172A] text-lg">Profit Sharing Income</h3>
           </div>
-          <span className="text-[9px] font-black text-black bg-slate-100 px-3 py-1.5 rounded-full uppercase tracking-widest leading-none">3-Level Rewards</span>
+          <span className="text-[9px] font-black text-black bg-slate-100 px-3 py-1.5 rounded-full uppercase tracking-widest leading-none">3-Tier Rewards</span>
         </div>
         
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-slate-50 rounded-2xl p-4 text-center">
-            <p className="text-[9px] font-black text-slate-400 uppercase mb-1.5 tracking-wider tracking-tighter">Level 1</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase mb-1.5 tracking-wider tracking-tighter">Tier 1</p>
             <p className="text-sm font-black text-[#0F172A]">{referralIncome.level1}</p>
           </div>
           <div className="bg-slate-50 rounded-2xl p-4 text-center">
-            <p className="text-[9px] font-black text-slate-400 uppercase mb-1.5 tracking-wider tracking-tighter">Level 2</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase mb-1.5 tracking-wider tracking-tighter">Tier 2</p>
             <p className="text-sm font-black text-[#0F172A]">{referralIncome.level2}</p>
           </div>
           <div className="bg-slate-50 rounded-2xl p-4 text-center">
-            <p className="text-[9px] font-black text-slate-400 uppercase mb-1.5 tracking-wider tracking-tighter">Level 3</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase mb-1.5 tracking-wider tracking-tighter">Tier 3</p>
             <p className="text-sm font-black text-[#0F172A]">{referralIncome.level3}</p>
           </div>
         </div>
         
         <div className="flex items-center justify-between pt-5 border-t border-slate-100">
-          <span className="text-xs font-bold text-slate-500">Total Referral Earnings</span>
+          <span className="text-xs font-bold text-slate-500">Total Profit Sharing Earnings</span>
           <span className="text-xl font-black text-black tracking-tight">{referralIncome.total}</span>
         </div>
       </section>

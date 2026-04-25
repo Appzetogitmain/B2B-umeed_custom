@@ -4,36 +4,38 @@ import {
   ShoppingCart as CartIcon, 
   Plus as PlusIcon, 
   ChevronRight as RightIcon, 
-  Package as BoxIcon, 
   TrendingUp as UpIcon, 
-  Droplets as DropIcon, 
-  UtensilsCrossed as ForkIcon, 
-  Pizza as PizzaIcon, 
-  Coffee as CoffeeIcon,
-  ChefHat as KitchenIcon,
-  Home as HomeIcon,
-  Shirt as LaundryIcon,
-  User as UserIcon,
-  Sparkles as HygieneIcon,
-  Flame as PujaIcon,
-  Book as SchoolIcon,
-  Tv as ElectronicsIcon,
-  Cookie as SnackIcon
+  ShoppingBasket,
+  Flame,
+  GlassWater,
+  Sofa,
+  WashingMachine,
+  HeartPulse,
+  ShieldCheck,
+  Sun,
+  GraduationCap,
+  Zap,
+  Droplets,
+  UtensilsCrossed,
+  Soup
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import useCart from '../hooks/useCart'
 
 const categories = [
-  { name: 'Grocery | Kitchen', icon: <KitchenIcon size={20} /> },
-  { name: 'Masala | Oil | Ghee', icon: <DropIcon size={20} /> },
-  { name: 'Drinks | Noodles | Snacks', icon: <SnackIcon size={20} /> },
-  { name: 'Home Cleaning & Decore', icon: <HomeIcon size={20} /> },
-  { name: 'Laundry - Soft Touch', icon: <LaundryIcon size={20} /> },
-  { name: 'Personal Care', icon: <UserIcon size={20} /> },
-  { name: 'Personal Hygiene', icon: <HygieneIcon size={20} /> },
-  { name: 'Puja Essential', icon: <PujaIcon size={20} /> },
-  { name: 'School Accessories', icon: <SchoolIcon size={20} /> },
-  { name: 'Electronics & Appliances', icon: <ElectronicsIcon size={20} /> }
+  { name: 'Grocery | Kitchen',        icon: <ShoppingBasket size={22} /> },
+  { name: 'Oil & Ghee',               icon: <Droplets size={22} /> },
+  { name: 'Spices',                   icon: <UtensilsCrossed size={22} /> },
+  { name: 'Noodles',                  icon: <Soup size={22} /> },
+  { name: 'Masala | Oil | Ghee',      icon: <Flame size={22} /> },
+  { name: 'Drinks | Noodles | Snacks',icon: <GlassWater size={22} /> },
+  { name: 'Home Cleaning & Decore',   icon: <Sofa size={22} /> },
+  { name: 'Laundry - Soft Touch',     icon: <WashingMachine size={22} /> },
+  { name: 'Personal Care',            icon: <HeartPulse size={22} /> },
+  { name: 'Personal Hygiene',         icon: <ShieldCheck size={22} /> },
+  { name: 'Puja Essential',           icon: <Sun size={22} /> },
+  { name: 'School Accessories',       icon: <GraduationCap size={22} /> },
+  { name: 'Electronics & Appliances', icon: <Zap size={22} /> },
 ]
 
 const products = [
@@ -140,7 +142,7 @@ function Home() {
       {/* COMPACT HEADER */}
       <header className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Umeed</h1>
+          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Umeed Retailers</h1>
           <p className="text-[11px] text-slate-400 font-medium">Retailer Portal</p>
         </div>
         <Link to="/retailer/cart" className="relative h-10 w-10 grid place-items-center bg-white rounded-xl shadow-sm border border-slate-100 transition-all active:scale-90">
@@ -166,7 +168,7 @@ function Home() {
       {/* COMPACT BANNER */}
       <section className="relative overflow-hidden bg-black text-white p-5 rounded-2xl mb-6 shadow-lg shadow-black/10">
         <div className="relative z-10 pr-20">
-          <h2 className="text-lg font-bold mb-0.5 leading-tight">Restock Deal</h2>
+          <h2 className="text-lg font-bold mb-0.5 leading-tight">Today's Hot Deal</h2>
           <p className="text-gray-400 text-[10px] mb-4 opacity-90 leading-tight">Save 15% on bulk orders this week.</p>
           <button className="bg-white text-black px-4 py-1.5 rounded-lg text-[10px] font-bold shadow-md active:scale-95 transition-transform uppercase">
             View
@@ -186,24 +188,24 @@ function Home() {
             See all <RightIcon size={12} />
           </button>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           {categories.map((cat) => (
             <button 
               key={cat.name} 
               onClick={() => setSelectedCategory(cat.name)}
-              className="flex flex-col items-center gap-2 shrink-0 group outline-none"
+              className="flex flex-col items-center gap-2 shrink-0 w-16 group outline-none"
             >
-              <div className={`h-14 w-14 rounded-xl shadow-sm border transition-all active:scale-95 grid place-items-center ${
+              <div className={`h-14 w-14 rounded-2xl shadow-sm border transition-all active:scale-95 grid place-items-center ${
                 selectedCategory === cat.name 
                 ? 'bg-black text-white border-black shadow-md' 
-                : 'bg-white text-black border-slate-50'
+                : 'bg-white text-slate-600 border-slate-100'
               }`}>
                 {cat.icon}
               </div>
-              <span className={`text-[9px] font-bold uppercase tracking-tighter transition-colors ${
+              <span className={`text-[9px] font-bold uppercase tracking-tighter text-center leading-tight transition-colors w-full ${
                 selectedCategory === cat.name ? 'text-black' : 'text-slate-500'
               }`}>
-                {cat.name.split(' | ')[0]}
+                {cat.name.split(' | ')[0].split(' - ')[0].split(' & ')[0]}
               </span>
             </button>
           ))}

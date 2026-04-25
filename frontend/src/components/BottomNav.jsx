@@ -97,7 +97,7 @@ function BottomNav() {
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute left-0 top-2 z-0 flex h-12 items-center justify-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          className="pointer-events-none absolute left-0 top-1 z-0 flex h-10 items-center justify-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{
             transform: `translateX(${safeIndex * 100}%)`,
             width: `${100 / tabs.length}%`,
@@ -126,11 +126,7 @@ function BottomNav() {
               >
                 <NavIcon name={tab.icon} active={location.pathname === tab.path} />
               </span>
-              <span
-                className={`leading-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                  location.pathname === tab.path ? 'translate-y-0 opacity-100' : 'translate-y-px opacity-90'
-                }`}
-              >
+              <span className="relative z-10 leading-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]">
                 {tab.label}
               </span>
             </button>

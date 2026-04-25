@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Phone, MapPin, Award, UserPlus, Network, LayoutDashboard, LogOut, ChevronRight, ShieldCheck, Settings } from 'lucide-react'
+import { Phone, MapPin, Award, UserPlus, Users, LayoutDashboard, LogOut, ChevronRight, ShieldCheck, Settings } from 'lucide-react'
 
 function Profile() {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ function Profile() {
           </div>
           <div className="mt-2">
             <h2 className="text-2xl font-black text-[#0F172A] leading-tight tracking-tight">
-              {isDeliveryRoute ? 'Nadeem Ahmed' : 'Umeed Retail Store'}
+              {isDeliveryRoute ? 'Nadeem Ahmed' : 'Umeed Retailer'}
             </h2>
             <p className="text-xs text-slate-400 font-black uppercase tracking-[0.2em] mt-2">ID: {isDeliveryRoute ? 'DP-44712' : 'RT-90817'}</p>
             <div className={`mt-4 mx-auto flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2 rounded-2xl w-fit border border-amber-100/50 shadow-sm shadow-amber-100`}>
@@ -59,13 +59,13 @@ function Profile() {
             <div className="h-14 w-14 bg-slate-100 text-black rounded-[24px] grid place-items-center group-hover:bg-black group-hover:text-white group-hover:shadow-lg group-hover:shadow-black/10 transition-all">
               <UserPlus size={24} />
             </div>
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Affiliate Link</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Share Link With Your Retailer Partner</span>
           </button>
           <button className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-50 flex flex-col items-center gap-4 active:scale-95 transition-all group">
             <div className="h-14 w-14 bg-slate-50 text-slate-600 rounded-[24px] grid place-items-center group-hover:bg-[#0F172A] group-hover:text-white transition-all">
-              <Network size={24} />
+              <Users size={24} />
             </div>
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Downline</span>
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Retail Partner</span>
           </button>
         </section>
       )}
