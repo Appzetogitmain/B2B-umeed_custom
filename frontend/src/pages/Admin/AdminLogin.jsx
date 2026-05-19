@@ -4,21 +4,28 @@ import { useNavigate } from 'react-router-dom'
 function AdminLogin() {
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
 
   const handleChange = (event) => {
     const { name, value } = event.target
     setCredentials((prev) => ({ ...prev, [name]: value }))
+    if (error) setError('')
   }
 
   const handleSubmit = (event) => {
     event.preventDefault()
 
     if (!credentials.email.trim() || !credentials.password.trim()) {
+      setError('Please fill in all fields')
       return
     }
 
-    localStorage.setItem('umeed-admin-auth', 'true')
-    navigate('/admin/dashboard', { replace: true })
+    if (credentials.email === 'admin@umeed.com' && credentials.password === '123456') {
+      localStorage.setItem('umeed-admin-auth', 'true')
+      navigate('/admin/dashboard', { replace: true })
+    } else {
+      setError('Invalid email or password')
+    }
   }
 
   return (
@@ -39,6 +46,12 @@ function AdminLogin() {
           <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-500">ADMIN ACCESS</p>
           <h1 className="mt-2 text-2xl font-semibold text-black">Admin Login</h1>
           <p className="mt-1 text-sm text-gray-500">Login to access your dashboard</p>
+
+          {error && (
+            <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-500 border border-red-200">
+              {error}
+            </div>
+          )}
 
           <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
             <div>

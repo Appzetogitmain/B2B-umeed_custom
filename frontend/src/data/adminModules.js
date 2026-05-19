@@ -8,6 +8,8 @@ export const adminSidebarSections = [
     items: [
       { label: 'Retailer Management', path: 'retailers', icon: 'retailers' },
       { label: 'Delivery Partners', path: 'delivery-partners', icon: 'retailers' },
+      { label: 'Category Management', path: 'categories', icon: 'products' },
+      { label: 'Banner Management', path: 'banners', icon: 'products' },
       { label: 'Product & Pricing', path: 'products-pricing', icon: 'products' },
       { label: 'Order Management', path: 'order-management', icon: 'orders' },
       { label: 'Inventory Visibility', path: 'inventory', icon: 'inventory' },
@@ -40,6 +42,25 @@ export const adminSidebarSections = [
 ]
 
 export const adminModuleContent = {
+  categories: {
+    title: 'Category Management',
+    subtitle: 'Manage wholesale product categories and catalogs.',
+    points: [
+      'Create new product categories with custom names and cover images',
+      'Upload images to Cloudinary dynamically',
+      'Edit category details and delete category records'
+    ]
+  },
+  banners: {
+    title: 'Banner Management',
+    subtitle: 'Manage promotional banners and advertisements for the retailer app.',
+    points: [
+      'Create and publish dynamic promotional banners',
+      'Add custom titles, descriptions, and high-quality cover images',
+      'Upload promotional images to Cloudinary dynamically',
+      'Edit banner details and delete inactive banners'
+    ]
+  },
   retailers: {
     title: 'Retailer Management',
     subtitle: 'Manage onboarding, KYC, activation, and retailer lifecycle.',

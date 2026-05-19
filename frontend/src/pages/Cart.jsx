@@ -65,20 +65,33 @@ function Cart() {
       )}
 
       {/* COMPACT STICKY CHECKOUT - MINIMAL VERSION */}
-      {cartItems.length > 0 && (
-        <div className="fixed bottom-[96px] left-4 right-4 z-40">
-          <div className="bg-black text-white rounded-2xl p-4 shadow-xl flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5">Payable Amount</span>
-              <span className="text-lg font-black tracking-tight">{formatCurrency(totalPrice)}</span>
+      {cartItems.length > 0 && (() => {
+        const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}');
+        const isBillingStaff = retailerData.isStaff && retailerData.staffRole === 'Billing Staff';
+        return (
+          <div className="fixed bottom-[96px] left-4 right-4 z-40">
+            <div className="bg-black text-white rounded-2xl p-4 shadow-xl flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mb-0.5">Payable Amount</span>
+                <span className="text-lg font-black tracking-tight">{formatCurrency(totalPrice)}</span>
+              </div>
+              <button 
+                onClick={() => {
+                  if (isBillingStaff) {
+                    alert("Billing Staff cannot place orders directly. Order draft has been saved & sent to Owner (" + retailerData.name + ") for approval!");
+                  } else {
+                    alert("Order checkout successfully completed!");
+                  }
+                }}
+                className="h-11 px-6 bg-white text-black rounded-xl font-black text-[10px] uppercase tracking-[0.15em] flex items-center gap-2 active:scale-95 transition-all"
+              >
+                {isBillingStaff ? 'Send to Owner for Approval' : 'Checkout'}
+                <ArrowRight size={14} strokeWidth={3} />
+              </button>
             </div>
-            <button className="h-11 px-6 bg-white text-black rounded-xl font-black text-[10px] uppercase tracking-[0.15em] flex items-center gap-2 active:scale-95 transition-all">
-              Checkout
-              <ArrowRight size={14} strokeWidth={3} />
-            </button>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   )
 }

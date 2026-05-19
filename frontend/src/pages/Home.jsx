@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { 
   Search as SearchIcon, 
   ShoppingCart as CartIcon, 
@@ -81,6 +81,48 @@ function Home() {
   const { addToCart, totalItems } = useCart()
   const [addedId, setAddedId] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [dynamicCategories, setDynamicCategories] = useState([])
+  const [dynamicBanners, setDynamicBanners] = useState([])
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await fetch('http://localhost:5200/api/v1/categories')
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.length > 0) {
+            setDynamicCategories(data)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+      }
+    }
+    const fetchBanners = async () => {
+      try {
+        const res = await fetch('http://localhost:5200/api/v1/banners')
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.length > 0) {
+            setDynamicBanners(data)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching banners:', err)
+      }
+    }
+    fetchCats()
+    fetchBanners()
+  }, [])
+
+  useEffect(() => {
+    if (dynamicBanners.length <= 1) return
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % dynamicBanners.length)
+    }, 3500)
+    return () => clearInterval(interval)
+  }, [dynamicBanners])
 
   const products = [
     // Grocery | Kitchen
@@ -127,9 +169,25 @@ function Home() {
     { id: '23', category: 'Electronics & Appliances', name: 'Power Bank 20000mAh', price: 1499, originalPrice: 2000, discount: '25% OFF', image: 'https://images.unsplash.com/photo-1609091839311-d5364f512c58?auto=format&fit=crop&q=80&w=300' },
   ]
 
+  const displayedCategories = dynamicCategories.length > 0 
+    ? dynamicCategories.map(cat => ({
+        name: cat.categoryName,
+        image: cat.image,
+        isDynamic: true
+      }))
+    : categories.map(cat => ({
+        name: cat.name,
+        icon: cat.icon,
+        isDynamic: false
+      }))
+
   const filteredProducts = selectedCategory === 'All' 
     ? products 
-    : products.filter(p => p.category === selectedCategory)
+    : products.filter(p => {
+        const catLower = selectedCategory.toLowerCase().trim()
+        const prodCatLower = p.category.toLowerCase().trim()
+        return prodCatLower.includes(catLower) || catLower.includes(prodCatLower)
+      })
 
   const handleAdd = (product) => {
     addToCart(product)
@@ -165,17 +223,57 @@ function Home() {
         />
       </div>
 
-      {/* COMPACT BANNER */}
-      <section className="relative overflow-hidden bg-black text-white p-5 rounded-2xl mb-6 shadow-lg shadow-black/10">
-        <div className="relative z-10 pr-20">
-          <h2 className="text-lg font-bold mb-0.5 leading-tight">Today's Hot Deal</h2>
-          <p className="text-gray-400 text-[10px] mb-4 opacity-90 leading-tight">Save 15% on bulk orders this week.</p>
-          <button className="bg-white text-black px-4 py-1.5 rounded-lg text-[10px] font-bold shadow-md active:scale-95 transition-transform uppercase">
-            View
-          </button>
+      {/* COMPACT BANNER CAROUSEL */}
+      {dynamicBanners.length > 0 ? (
+        <div className="relative overflow-hidden w-full rounded-2xl mb-6 shadow-lg shadow-black/10 min-h-[120px]">
+          <div 
+            className="flex transition-transform duration-700 ease-in-out"
+            style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
+          >
+            {dynamicBanners.map((banner, idx) => (
+              <section 
+                key={banner._id || idx} 
+                className="relative shrink-0 w-full min-h-[120px] bg-black text-white p-5 flex flex-col justify-center"
+              >
+                {banner.image && (
+                  <div className="absolute inset-0 z-0">
+                    <img src={banner.image} alt={banner.title} className="w-full h-full object-cover opacity-50" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+                  </div>
+                )}
+                <div className="relative z-10 pr-20">
+                  <h2 className="text-lg font-bold mb-0.5 leading-tight">{banner.title}</h2>
+                  <p className="text-gray-300 text-[10px] mb-0 opacity-90 leading-tight">{banner.description}</p>
+                </div>
+              </section>
+            ))}
+          </div>
+
+          {/* INDICATOR DOTS */}
+          {dynamicBanners.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+              {dynamicBanners.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentBannerIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    currentBannerIndex === idx ? 'w-4 bg-white' : 'w-1.5 bg-white/40'
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        <UpIcon className="absolute -right-4 -top-4 text-white/5 w-32 h-32 -rotate-12" />
-      </section>
+      ) : (
+        <section className="relative overflow-hidden bg-black text-white p-5 rounded-2xl mb-6 shadow-lg shadow-black/10">
+          <div className="relative z-10 pr-20">
+            <h2 className="text-lg font-bold mb-0.5 leading-tight">Today's Hot Deal</h2>
+            <p className="text-gray-400 text-[10px] mb-0 opacity-90 leading-tight">Save 15% on bulk orders this week.</p>
+          </div>
+          <UpIcon className="absolute -right-4 -top-4 text-white/5 w-32 h-32 -rotate-12" />
+        </section>
+      )}
 
       {/* CATEGORIES */}
       <section className="mb-6">
@@ -189,18 +287,30 @@ function Home() {
           </button>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {categories.map((cat) => (
+          {displayedCategories.map((cat) => (
             <button 
               key={cat.name} 
               onClick={() => setSelectedCategory(cat.name)}
               className="flex flex-col items-center gap-2 shrink-0 w-16 group outline-none"
             >
-              <div className={`h-14 w-14 rounded-2xl shadow-sm border transition-all active:scale-95 grid place-items-center ${
+              <div className={`h-14 w-14 rounded-2xl shadow-sm border transition-all overflow-hidden active:scale-95 grid place-items-center ${
                 selectedCategory === cat.name 
                 ? 'bg-black text-white border-black shadow-md' 
                 : 'bg-white text-slate-600 border-slate-100'
               }`}>
-                {cat.icon}
+                {cat.isDynamic ? (
+                  cat.image ? (
+                    <img 
+                      src={cat.image} 
+                      alt={cat.name} 
+                      className="h-full w-full object-cover rounded-2xl p-1"
+                    />
+                  ) : (
+                    <ShoppingBasket size={22} />
+                  )
+                ) : (
+                  cat.icon
+                )}
               </div>
               <span className={`text-[9px] font-bold uppercase tracking-tighter text-center leading-tight transition-colors w-full ${
                 selectedCategory === cat.name ? 'text-black' : 'text-slate-500'

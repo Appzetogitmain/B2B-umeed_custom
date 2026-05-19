@@ -185,6 +185,8 @@ function AdminLayout() {
     '/admin/products': 'Product Management',
     '/admin/products-pricing': 'Product Management',
     '/admin/retailers': 'Retailer Management',
+    '/admin/categories': 'Category Management',
+    '/admin/banners': 'Banner Management',
     '/admin/commission': 'Commission Management',
     '/admin/cashback-voucher': 'Cashback & Voucher Management',
     '/admin/wallet-system': 'Wallet System',
@@ -338,6 +340,16 @@ function AdminLayout() {
                 <input
                   type="search"
                   placeholder="Search..."
+                  value={new URLSearchParams(location.search).get('q') || ''}
+                  onChange={(e) => {
+                    const params = new URLSearchParams(location.search)
+                    if (e.target.value) {
+                      params.set('q', e.target.value)
+                    } else {
+                      params.delete('q')
+                    }
+                    navigate({ search: params.toString() }, { replace: true })
+                  }}
                   className="h-9 w-full rounded-[8px] border border-[#e2e5e9] bg-[#f5f6f8] pl-9 pr-3 text-[13px] font-normal text-gray-700 placeholder-gray-500 focus:border-gray-400 focus:outline-none"
                 />
               </div>

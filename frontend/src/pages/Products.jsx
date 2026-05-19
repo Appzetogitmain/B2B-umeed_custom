@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Search, SlidersHorizontal, ShoppingCart, Package } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import useCart from '../hooks/useCart'
@@ -60,10 +60,34 @@ function Products() {
   const { addToCart, totalItems } = useCart()
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [addedId, setAddedId] = useState(null)
+  const [dynamicCategories, setDynamicCategories] = useState([])
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await fetch('http://localhost:5200/api/v1/categories')
+        if (res.ok) {
+          const data = await res.json()
+          if (data && data.length > 0) {
+            setDynamicCategories(data.map(c => c.categoryName))
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err)
+      }
+    }
+    fetchCats()
+  }, [])
+
+  const displayedCategories = ['All', ...(dynamicCategories.length > 0 ? dynamicCategories : categories.slice(1))]
 
   const filteredProducts = selectedCategory === 'All' 
     ? products 
-    : products.filter(p => p.category === selectedCategory)
+    : products.filter(p => {
+        const catLower = selectedCategory.toLowerCase().trim()
+        const prodCatLower = p.category.toLowerCase().trim()
+        return prodCatLower.includes(catLower) || catLower.includes(prodCatLower)
+      })
 
   const handleAdd = (product) => {
     addToCart(product)
@@ -105,7 +129,7 @@ function Products() {
 
       {/* CATEGORIES */}
       <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-        {categories.map((cat) => (
+        {displayedCategories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}

@@ -10,6 +10,7 @@ import Profile from '../pages/Profile'
 import Cart from '../pages/Cart'
 import OrderDetail from '../pages/OrderDetail'
 import ProductDetail from '../pages/ProductDetail'
+import Settings from '../pages/Settings'
 import AdminLogin from '../pages/Admin/AdminLogin'
 import AdminDashboard from '../pages/Admin/AdminDashboard'
 import AdminModulePage from '../pages/Admin/AdminModulePage'
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="products" element={<Products />} />
         <Route path="wallet" element={<Wallet />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="cart" element={<Cart />} />
       </Route>
 
