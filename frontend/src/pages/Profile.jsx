@@ -24,14 +24,14 @@ function Profile() {
   const staffRole = retailerData?.staffRole || '';
   const displayName = isDeliveryRoute ? 'Nadeem Ahmed' : (isStaff ? staffName : (retailerData?.name || 'Umeed Retailer'));
   const displayId = isDeliveryRoute ? 'DP-44712' : (retailerData?._id ? `RT-${retailerData._id.substring(retailerData._id.length - 6).toUpperCase()}` : 'RT-90817');
-  
+
   const getInitials = (name) => {
     if (!name) return 'UR';
     const words = name.trim().split(' ');
     if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
   };
-  
+
   const initials = isDeliveryRoute ? 'DP' : getInitials(displayName);
   const displayEmail = isDeliveryRoute ? 'nadeem@delivery.com' : (retailerData?.email || 'store.manager@shop.com');
   const displayPhone = isDeliveryRoute ? '+92 300 1234567' : (retailerData?.phone || '+92 300 1234567');
@@ -161,7 +161,7 @@ function Profile() {
           <p className="text-sm text-slate-500 font-medium mt-1">Wholesale identity & settings</p>
         </div>
         {!isDeliveryRoute && !isStaff && (
-          <button 
+          <button
             onClick={() => navigate('/retailer/settings')}
             className="h-12 w-12 grid place-items-center bg-white rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all"
           >
@@ -195,7 +195,7 @@ function Profile() {
       {/* QUICK ACTIONS (RETAILER ONLY) */}
       {!isDeliveryRoute && !isStaff && (
         <section className="mb-10">
-          <button 
+          <button
             onClick={() => { window.location.hash = 'share'; }}
             className="w-full bg-white p-6 rounded-[32px] shadow-sm border border-slate-50 flex flex-col items-center gap-4 active:scale-95 transition-all group"
           >
@@ -214,11 +214,11 @@ function Profile() {
           <ProfileTab icon={<Phone size={18} />} label="Registered Phone" value={displayPhone} />
           <ProfileTab icon={<MapPin size={18} />} label="Delivery Location" value={displayAddress} />
           {!isDeliveryRoute && (
-            <ProfileTab 
-              icon={<LayoutDashboard size={18} />} 
-              label="Earning Analytics" 
-              value="Detailed Dashboard" 
-              hasArrow 
+            <ProfileTab
+              icon={<LayoutDashboard size={18} />}
+              label="Earning Analytics"
+              value="Detailed Dashboard"
+              hasArrow
             />
           )}
         </div>
@@ -237,7 +237,7 @@ function Profile() {
       {shareOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white w-full rounded-[32px] max-w-md p-6 shadow-2xl relative">
-            <button 
+            <button
               onClick={() => { window.location.hash = ''; }}
               className="absolute top-6 right-6 h-10 w-10 grid place-items-center bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100 transition-colors"
             >
@@ -253,9 +253,9 @@ function Profile() {
 
             {/* SHARE ICONS */}
             <div className="grid grid-cols-4 gap-4 mb-6">
-              <a 
-                href={`https://api.whatsapp.com/send?text=Hey!%20Join%20Umeed%20B2B%20Retailer%20network%20and%20order%20wholesale%20goods%20easily%20using%20my%20link:%20https://umeed.com/retailer/signup?ref=${displayId}`} 
-                target="_blank" 
+              <a
+                href={`https://api.whatsapp.com/send?text=Hey!%20Join%20Umeed%20B2B%20Retailer%20network%20and%20order%20wholesale%20goods%20easily%20using%20my%20link:%20https://umeed.com/retailer/signup?ref=${displayId}`}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-2 group"
               >
@@ -274,7 +274,7 @@ function Profile() {
 
             <div className="bg-slate-50 p-4 rounded-2xl flex items-center justify-between border border-slate-100">
               <span className="text-xs font-bold text-slate-500 truncate max-w-[200px]">https://umeed.com/signup?ref={displayId}</span>
-              <button 
+              <button
                 onClick={handleCopyLink}
                 className="text-xs font-black text-black bg-white border border-slate-100 shadow-sm px-4 py-2 rounded-xl active:scale-95 transition-all"
               >
