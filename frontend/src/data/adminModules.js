@@ -23,18 +23,9 @@ export const adminSidebarSections = [
     title: 'Incentive & Target',
     items: [
       { label: 'Monthly Targets', path: 'monthly-targets', icon: 'targets' },
-      { label: 'Performance Tracking', path: 'performance', icon: 'performance' },
-      { label: 'Gift Points', path: 'gift-points', icon: 'gifts' },
-      { label: 'Rewards Distribution', path: 'rewards', icon: 'rewards' },
     ],
   },
-  {
-    title: 'Network System',
-    items: [
-      { label: 'Referral Tree', path: 'referral-tree', icon: 'referral' },
-      { label: 'Commission Distribution', path: 'commission-distribution', icon: 'distribution' },
-    ],
-  },
+
   {
     title: 'System',
     items: [{ label: 'Settings', path: 'settings', icon: 'settings' }],
@@ -190,51 +181,7 @@ export const adminModuleContent = {
       'Target lock and approval workflow',
     ],
   },
-  performance: {
-    title: 'Performance Tracking',
-    subtitle: 'Track team and partner outcomes against business KPIs.',
-    points: [
-      'Goal vs achievement heatmaps',
-      'Underperforming node detection',
-      'Actionable alerts with trend summaries',
-    ],
-  },
-  'gift-points': {
-    title: 'Gift Point Management',
-    subtitle: 'Manage accrual, redemption, and expiry of gift points.',
-    points: [
-      'Rule engine for points on order milestones',
-      'Point burn and expiry scheduler',
-      'Ledger and dispute tracking',
-    ],
-  },
-  rewards: {
-    title: 'Rewards & Gift Distribution',
-    subtitle: 'Control reward inventory and distribution approvals.',
-    points: [
-      'Catalog of rewards and stock thresholds',
-      'Distribution approvals and dispatch logs',
-      'Campaign effectiveness reports',
-    ],
-  },
-  'referral-tree': {
-    title: 'Multi-level Referral Tree View',
-    subtitle: 'Visualize role-based referral hierarchy and network growth.',
-    points: [
-      'Node-level drill-down of uplines and downlines',
-      'Role-aware expansion limits and visibility',
-      'Network performance overlays',
-    ],
-  },
-  'commission-distribution': {
-    title: 'Commission Distribution Logic',
-    subtitle: 'Manage 3-level or unlimited role-based distribution models.',
-    points: [
-      '3-level and unlimited distribution switch by role',
-      'Formula preview before publishing policy updates',
-      'Audit trail for every payout calculation',
-    ],
-  },
+
   settings: {
     title: 'Admin Settings',
     subtitle: 'Central control for panel behavior and governance defaults.',

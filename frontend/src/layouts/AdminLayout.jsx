@@ -192,11 +192,6 @@ function AdminLayout() {
     '/admin/wallet-system': 'Wallet System',
     '/admin/payments-reports': 'Payments & Reports',
     '/admin/monthly-targets': 'Monthly Targets',
-    '/admin/performance': 'Performance Tracking',
-    '/admin/gift-points': 'Gift Points',
-    '/admin/rewards': 'Rewards Distribution',
-    '/admin/referral-tree': 'Referral Tree',
-    '/admin/commission-distribution': 'Commission Distribution',
     '/admin/settings': 'Settings',
   }
 

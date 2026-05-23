@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, ArrowRight, ShieldCheck } from 'lucide-react'
+import { LogIn, ArrowRight, ShieldCheck, ArrowLeft, Mail } from 'lucide-react'
 
 function Login() {
   const [loginType, setLoginType] = useState('owner') // 'owner' or 'partner'
@@ -9,6 +9,45 @@ function Login() {
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
   const [error, setError] = useState('')
+  const [view, setView] = useState('login') // 'login' or 'forgot'
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotSuccess, setForgotSuccess] = useState('')
+  const [forgotError, setForgotError] = useState('')
+  const [forgotSubmitting, setForgotSubmitting] = useState(false)
+
+  const handleForgotSubmit = async (event) => {
+    event.preventDefault()
+    setForgotError('')
+    setForgotSuccess('')
+
+    if (!forgotEmail.trim()) {
+      setForgotError('Please enter your email address')
+      return
+    }
+
+    setForgotSubmitting(true)
+
+    try {
+      const response = await fetch('http://localhost:5200/api/v1/auth/retailer/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong')
+      }
+
+      setForgotSubmitting(false)
+      setForgotSuccess(data.message)
+      setForgotEmail('')
+    } catch (err) {
+      setForgotSubmitting(false)
+      setForgotError(err.message)
+    }
+  }
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -127,87 +166,159 @@ function Login() {
       <section className="flex-1 px-6 pt-8 pb-10">
         <div className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 -mt-12 relative z-20">
 
+          {view === 'forgot' ? (
+            <>
+              <div className="flex items-center gap-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setView('login')
+                    setForgotError('')
+                    setForgotSuccess('')
+                  }}
+                  className="h-9 w-9 rounded-xl bg-slate-50 border border-slate-100 grid place-items-center active:scale-95 transition-all text-slate-600"
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-[#0F172A]">Forgot Password</h2>
+                  <p className="text-xs text-slate-400 font-medium">Reset your retailer account credentials</p>
+                </div>
+              </div>
 
-          {error && (
-            <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm font-medium text-red-500 border border-red-100 flex items-center gap-3 animate-fade-in">
-              <ShieldCheck size={18} className="text-red-400" />
-              {error}
-            </div>
-          )}
+              {forgotError && (
+                <div className="mb-6 rounded-2xl bg-red-50 p-4 text-xs font-semibold text-red-500 border border-red-100 flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-red-400" />
+                  {forgotError}
+                </div>
+              )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {loginType === 'owner' ? (
-              <>
+              {forgotSuccess && (
+                <div className="mb-6 rounded-2xl bg-green-50 p-4 text-xs font-semibold text-green-700 border border-green-100 flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-green-400" />
+                  {forgotSuccess}
+                </div>
+              )}
+
+              <form className="space-y-6" onSubmit={handleForgotSubmit}>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Account</label>
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Registered Email</label>
                   <input
-                    name="email"
                     type="email"
                     placeholder="store.manager@shop.com"
-                    value={form.email}
-                    onChange={handleChange}
+                    value={forgotEmail}
+                    onChange={(e) => {
+                      setForgotEmail(e.target.value)
+                      if (forgotError) setForgotError('')
+                    }}
                     className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Access Password</label>
-                  <input
-                    name="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={form.password}
-                    onChange={handleChange}
-                    className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
-                    required
-                  />
+                <button 
+                  type="submit" 
+                  className="w-full h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl shadow-black/10 disabled:opacity-70"
+                  disabled={forgotSubmitting}
+                >
+                  {forgotSubmitting ? 'Sending Link...' : 'Send Reset Link'}
+                  {!forgotSubmitting && <Mail size={18} />}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              {error && (
+                <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm font-medium text-red-500 border border-red-100 flex items-center gap-3 animate-fade-in">
+                  <ShieldCheck size={18} className="text-red-400" />
+                  {error}
                 </div>
+              )}
 
-                <div className="flex justify-end">
-                  <button type="button" className="text-xs font-bold text-black border-b border-black/10">Forgot Password?</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Owner Email Account</label>
-                  <input
-                    name="ownerEmail"
-                    type="email"
-                    placeholder="owner@store.com"
-                    value={partnerForm.ownerEmail}
-                    onChange={handlePartnerChange}
-                    className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
-                    required
-                  />
-                </div>
+              <form className="space-y-6" onSubmit={handleSubmit}>
+                {loginType === 'owner' ? (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Account</label>
+                      <input
+                        name="email"
+                        type="email"
+                        placeholder="store.manager@shop.com"
+                        value={form.email}
+                        onChange={handleChange}
+                        className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
+                        required
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Partner Phone Number</label>
-                  <input
-                    name="partnerPhone"
-                    type="tel"
-                    placeholder="e.g. 9875774774"
-                    value={partnerForm.partnerPhone}
-                    onChange={handlePartnerChange}
-                    maxLength={10}
-                    className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
-                    required
-                  />
-                </div>
-              </>
-            )}
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Access Password</label>
+                      <input
+                        name="password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={form.password}
+                        onChange={handleChange}
+                        className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
+                        required
+                      />
+                    </div>
 
-            <button 
-              type="submit" 
-              className="w-full h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl shadow-black/10 disabled:opacity-70"
-              disabled={submitting}
-            >
-              {submitting ? 'Verifying...' : 'Login Securely'}
-              {!submitting && <ArrowRight size={18} />}
-            </button>
-          </form>
+                    <div className="flex justify-end">
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setView('forgot')
+                          setError('')
+                        }}
+                        className="text-xs font-bold text-black border-b border-black/10 focus:outline-none"
+                      >
+                        Forgot Password?
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Owner Email Account</label>
+                      <input
+                        name="ownerEmail"
+                        type="email"
+                        placeholder="owner@store.com"
+                        value={partnerForm.ownerEmail}
+                        onChange={handlePartnerChange}
+                        className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Partner Phone Number</label>
+                      <input
+                        name="partnerPhone"
+                        type="tel"
+                        placeholder="e.g. 9875774774"
+                        value={partnerForm.partnerPhone}
+                        onChange={handlePartnerChange}
+                        maxLength={10}
+                        className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                <button 
+                  type="submit" 
+                  className="w-full h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl shadow-black/10 disabled:opacity-70"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Verifying...' : 'Login Securely'}
+                  {!submitting && <ArrowRight size={18} />}
+                </button>
+              </form>
+            </>
+          )}
 
           <div className="mt-3 text-center pt-4 border-t border-slate-50">
             <p className="text-sm font-medium text-slate-500">

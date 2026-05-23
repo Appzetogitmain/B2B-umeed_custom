@@ -48,6 +48,10 @@ const retailerSchema = new mongoose.Schema({
     type: String,
     default: 'Rs 0',
   },
+  isWalletFrozen: {
+    type: Boolean,
+    default: false,
+  },
   partners: {
     type: [{
       name: { type: String, required: true },
@@ -90,6 +94,8 @@ const retailerSchema = new mongoose.Schema({
   addressPinCode: { type: String, default: '' },
   addressState: { type: String, default: '' },
   photo: { type: String, default: '' },
+  resetPasswordToken: { type: String, default: '' },
+  resetPasswordExpires: { type: Date }
 }, {
   timestamps: true,
 });

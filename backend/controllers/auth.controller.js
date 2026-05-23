@@ -1,5 +1,8 @@
 import Retailer from '../models/Retailer.js';
+import Admin from '../models/Admin.js';
 import cloudinary from '../config/cloudinary.js';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 export const registerRetailer = async (req, res) => {
   try {
@@ -503,5 +506,154 @@ export const deleteAdminRetailer = async (req, res) => {
   } catch (error) {
     console.error('Delete admin retailer error:', error);
     res.status(500).json({ message: 'Server error deleting retailer' });
+  }
+};
+
+export const forgotPasswordRetailer = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Please provide email' });
+    }
+
+    const retailer = await Retailer.findOne({ email: email.toLowerCase() });
+    if (!retailer) {
+      return res.status(404).json({ message: 'No retailer account found with this email' });
+    }
+
+    // Generate secure random token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    retailer.resetPasswordToken = resetToken;
+    retailer.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    await retailer.save();
+
+    // Create nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/retailer/reset-password/${resetToken}`;
+
+    // Branded Professional Email Template
+    const mailOptions = {
+      from: `"Umeed Retailers Support" <${process.env.EMAIL_USER}>`,
+      to: retailer.email,
+      subject: 'Reset Password Request - Umeed Retailers',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+          <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9;">
+            <h1 style="color: #00a877; margin: 0; font-size: 28px; font-weight: 800; tracking-tight: -0.025em;">Umeed</h1>
+            <p style="color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin: 5px 0 0 0;">Retailer Network</p>
+          </div>
+          
+          <h2 style="color: #0f172a; font-size: 18px; font-weight: 700; margin-top: 0;">Password Reset Request</h2>
+          
+          <p style="color: #475569; font-size: 14px; line-height: 1.6;">Hello ${retailer.name || 'Valued Retailer'},</p>
+          <p style="color: #475569; font-size: 14px; line-height: 1.6;">We received a request to reset the password for your Umeed Retailer Account. Click the button below to update your password. This link is valid for <strong>1 hour</strong>.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #00a877; color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 14px; font-weight: bold; border-radius: 8px; display: inline-block; box-shadow: 0 4px 6px rgba(0, 168, 119, 0.15); transition: background-color 0.2s;">
+              Reset Password
+            </a>
+          </div>
+          
+          <p style="color: #64748b; font-size: 12px; line-height: 1.6;">If you didn't request a password reset, you can safely ignore this email. Your current password remains secure.</p>
+          
+          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+          
+          <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">This is an automated security email. Please do not reply directly to this message.</p>
+          <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 5px 0 0 0;">&copy; 2026 Umeed Inc. All rights reserved.</p>
+        </div>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: 'Password reset link sent to your registered email address.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error sending password reset email' });
+  }
+};
+
+export const resetPasswordRetailer = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    }
+
+    const retailer = await Retailer.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!retailer) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired' });
+    }
+
+    // Set new password (this will trigger schema.pre('save') which hashes the password)
+    retailer.password = password;
+    retailer.resetPasswordToken = '';
+    retailer.resetPasswordExpires = undefined;
+
+    await retailer.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error resetting password' });
+  }
+};
+
+export const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
+    const admin = await Admin.findOne({ email });
+    if (admin && (await admin.matchPassword(password))) {
+      res.json({
+        _id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        message: 'Admin logged in successfully'
+      });
+    } else {
+      res.status(401).json({ message: 'Invalid email or password' });
+    }
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+};
+
+export const updateAdminPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password are required' });
+    }
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    admin.password = newPassword;
+    await admin.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Update admin password error:', error);
+    res.status(500).json({ message: 'Server error updating password' });
   }
 };

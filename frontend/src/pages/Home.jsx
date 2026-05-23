@@ -18,19 +18,6 @@ import {
   Droplets,
   UtensilsCrossed,
   Soup
-  ShoppingBasket,
-  Flame,
-  GlassWater,
-  Sofa,
-  WashingMachine,
-  HeartPulse,
-  ShieldCheck,
-  Sun,
-  GraduationCap,
-  Zap,
-  Droplets,
-  UtensilsCrossed,
-  Soup
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import useCart from '../hooks/useCart'
@@ -109,37 +96,95 @@ function Home() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [dynamicCategories, setDynamicCategories] = useState([])
   const [dynamicBanners, setDynamicBanners] = useState([])
+  const [dynamicProducts, setDynamicProducts] = useState([])
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+
+  const getBackendUrl = () => {
+    const hostname = window.location.hostname;
+    // Safe fallback for localhost / 127.0.0.1 / file URIs
+    if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:5200';
+    }
+    // Dynamic IP handling (like 192.168.x.x) for physical device / emulator testing
+    if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) {
+      return `http://${hostname}:5200`;
+    }
+    return 'http://localhost:5200';
+  }
 
   useEffect(() => {
     const fetchCats = async () => {
       try {
-        const res = await fetch('http://localhost:5200/api/v1/categories')
+        const url = `${getBackendUrl()}/api/v1/categories`
+        console.log('[Retailer Home] Fetching categories from:', url)
+        const res = await fetch(url)
+        console.log('[Retailer Home] Categories response status:', res.status)
         if (res.ok) {
           const data = await res.json()
+          console.log('[Retailer Home] Categories data:', data)
           if (data && data.length > 0) {
             setDynamicCategories(data)
+          } else {
+            console.warn('[Retailer Home] Fetched categories array is empty.')
           }
+        } else {
+          console.error('[Retailer Home] Categories response was not ok.')
         }
       } catch (err) {
-        console.error('Error fetching categories:', err)
+        console.error('[Retailer Home] Error fetching categories:', err)
       }
     }
     const fetchBanners = async () => {
       try {
-        const res = await fetch('http://localhost:5200/api/v1/banners')
+        const url = `${getBackendUrl()}/api/v1/banners`
+        console.log('[Retailer Home] Fetching banners from:', url)
+        const res = await fetch(url)
+        console.log('[Retailer Home] Banners response status:', res.status)
+        if (res.ok) {
+          const data = await res.json()
+          console.log('[Retailer Home] Banners data:', data)
+          if (data && data.length > 0) {
+            setDynamicBanners(data)
+          } else {
+            console.warn('[Retailer Home] Fetched banners array is empty.')
+          }
+        } else {
+          console.error('[Retailer Home] Banners response was not ok.')
+        }
+      } catch (err) {
+        console.error('[Retailer Home] Error fetching banners:', err)
+      }
+    }
+    const fetchProducts = async () => {
+      setIsLoadingProducts(true);
+      try {
+        const url = `${getBackendUrl()}/api/v1/products`
+        const res = await fetch(url)
         if (res.ok) {
           const data = await res.json()
           if (data && data.length > 0) {
-            setDynamicBanners(data)
+            setDynamicProducts(data.map(p => ({
+              id: p._id,
+              category: p.category,
+              name: p.name,
+              price: p.price,
+              originalPrice: p.mrp,
+              discount: p.discount ? `${p.discount}% OFF` : '',
+              image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+              stock: p.stock
+            })))
           }
         }
       } catch (err) {
-        console.error('Error fetching banners:', err)
+        console.error('[Retailer Home] Error fetching products:', err)
+      } finally {
+        setIsLoadingProducts(false);
       }
     }
     fetchCats()
     fetchBanners()
+    fetchProducts()
   }, [])
 
   useEffect(() => {
@@ -207,12 +252,24 @@ function Home() {
       isDynamic: false
     }))
 
+  const activeProducts = dynamicProducts.length > 0 ? dynamicProducts : products;
+
   const filteredProducts = selectedCategory === 'All'
-    ? products
-    : products.filter(p => {
+    ? activeProducts
+    : activeProducts.filter(p => {
       const catLower = selectedCategory.toLowerCase().trim()
       const prodCatLower = p.category.toLowerCase().trim()
-      return prodCatLower.includes(catLower) || catLower.includes(prodCatLower)
+      
+      // Direct matching
+      if (prodCatLower.includes(catLower) || catLower.includes(prodCatLower)) {
+        return true
+      }
+      
+      // Dynamic intersection matching (e.g. "Snacks & Biscuits" matches "Drinks | Noodles | Snacks" by matching "snacks")
+      const catWords = catLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
+      const prodWords = prodCatLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
+      
+      return catWords.some(cw => prodWords.some(pw => pw.includes(cw) || cw.includes(pw)))
     })
 
   const handleAdd = (product) => {
@@ -226,7 +283,6 @@ function Home() {
       {/* COMPACT HEADER */}
       <header className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Umeed Retailers</h1>
           <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Umeed Retailers</h1>
           <p className="text-[11px] text-slate-400 font-medium">Retailer Portal</p>
         </div>
@@ -313,17 +369,15 @@ function Home() {
           </button>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          {displayedCategories.map((cat) => (
+          {displayedCategories.map((cat, idx) => (
             <button 
-              key={cat.name} 
+              key={`${cat.name}-${idx}`} 
               onClick={() => setSelectedCategory(cat.name)}
-              className="flex flex-col items-center gap-2 shrink-0 w-16 group outline-none"
               className="flex flex-col items-center gap-2 shrink-0 w-16 group outline-none"
             >
               <div className={`h-14 w-14 rounded-2xl shadow-sm border transition-all overflow-hidden active:scale-95 grid place-items-center ${
                 selectedCategory === cat.name 
                 ? 'bg-black text-white border-black shadow-md' 
-                : 'bg-white text-slate-600 border-slate-100'
                 : 'bg-white text-slate-600 border-slate-100'
               }`}>
                 {cat.isDynamic ? (
@@ -341,26 +395,30 @@ function Home() {
                 )}
               </div>
               <span className={`text-[9px] font-bold uppercase tracking-tighter text-center leading-tight transition-colors w-full ${
-              <span className={`text-[9px] font-bold uppercase tracking-tighter text-center leading-tight transition-colors w-full ${
                 selectedCategory === cat.name ? 'text-black' : 'text-slate-500'
               }`}>
-                {cat.name.split(' | ')[0].split(' - ')[0].split(' & ')[0]}
-                {cat.name.split(' | ')[0].split(' - ')[0].split(' & ')[0]}
+                {(cat.name || '').split(' | ')[0].split(' - ')[0].split(' & ')[0]}
               </span>
             </button>
           ))}
-    </div>
-      </section >
+        </div>
+      </section>
 
-    {/* COMPACT PRODUCTS */ }
-    < section >
+      {/* COMPACT PRODUCTS */}
+      <section>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-sm text-[#0F172A]">
             {selectedCategory === 'All' ? 'Popular Items' : selectedCategory}
           </h3>
         </div>
         <div className="grid grid-cols-2 gap-3 pb-4">
-          {filteredProducts.length > 0 ? filteredProducts.map((product) => (
+          {isLoadingProducts ? (
+            <div className="col-span-2 py-10 text-center">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+              </div>
+            </div>
+          ) : filteredProducts.length > 0 ? filteredProducts.map((product) => (
             <div key={product.id} className="bg-white rounded-xl p-2 shadow-sm border border-slate-50 flex flex-col hover:shadow-md transition-all duration-200 group">
               <div className="relative h-28 w-full bg-slate-50 rounded-lg overflow-hidden mb-2">
                 <img 
@@ -403,8 +461,8 @@ function Home() {
             </div>
           )}
         </div>
-      </section >
-    </div >
+      </section>
+    </div>
   )
 }
 

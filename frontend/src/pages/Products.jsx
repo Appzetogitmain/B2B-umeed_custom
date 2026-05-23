@@ -62,18 +62,39 @@ function Products() {
   const [addedId, setAddedId] = useState(null)
   const [dynamicCategories, setDynamicCategories] = useState([])
 
+  const getBackendUrl = () => {
+    const hostname = window.location.hostname;
+    // Safe fallback for localhost / 127.0.0.1 / file URIs
+    if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:5200';
+    }
+    // Dynamic IP handling (like 192.168.x.x) for physical device / emulator testing
+    if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) {
+      return `http://${hostname}:5200`;
+    }
+    return 'http://localhost:5200';
+  }
+
   useEffect(() => {
     const fetchCats = async () => {
       try {
-        const res = await fetch('http://localhost:5200/api/v1/categories')
+        const url = `${getBackendUrl()}/api/v1/categories`
+        console.log('[Retailer Products] Fetching categories from:', url)
+        const res = await fetch(url)
+        console.log('[Retailer Products] Categories response status:', res.status)
         if (res.ok) {
           const data = await res.json()
+          console.log('[Retailer Products] Categories data:', data)
           if (data && data.length > 0) {
             setDynamicCategories(data.map(c => c.categoryName))
+          } else {
+            console.warn('[Retailer Products] Fetched categories array is empty.')
           }
+        } else {
+          console.error('[Retailer Products] Categories response was not ok.')
         }
       } catch (err) {
-        console.error('Error fetching categories:', err)
+        console.error('[Retailer Products] Error fetching categories:', err)
       }
     }
     fetchCats()
@@ -86,7 +107,17 @@ function Products() {
     : products.filter(p => {
         const catLower = selectedCategory.toLowerCase().trim()
         const prodCatLower = p.category.toLowerCase().trim()
-        return prodCatLower.includes(catLower) || catLower.includes(prodCatLower)
+        
+        // Direct matching
+        if (prodCatLower.includes(catLower) || catLower.includes(prodCatLower)) {
+          return true
+        }
+        
+        // Dynamic intersection matching (e.g. "Snacks & Biscuits" matches "Drinks | Noodles | Snacks" by matching "snacks")
+        const catWords = catLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
+        const prodWords = prodCatLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
+        
+        return catWords.some(cw => prodWords.some(pw => pw.includes(cw) || cw.includes(pw)))
       })
 
   const handleAdd = (product) => {
@@ -129,9 +160,9 @@ function Products() {
 
       {/* CATEGORIES */}
       <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-        {displayedCategories.map((cat) => (
+        {displayedCategories.map((cat, idx) => (
           <button
-            key={cat}
+            key={`${cat}-${idx}`}
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
               selectedCategory === cat 

@@ -1,19 +1,27 @@
 import { useState, useEffect } from 'react'
 import { CreditCard, Wallet as WalletIcon, Gift, ArrowUpRight, ArrowDownLeft, Share2, Users, ShieldCheck, X, Copy, MessageSquare } from 'lucide-react'
 
+const getBackendUrl = () => {
+  const hostname = window.location.hostname;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:5200';
+  if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) return `http://${hostname}:5200`;
+  return 'http://localhost:5200';
+}
+
 function Wallet() {
-  const [balance, setBalance] = useState('Rs 18,760')
+  const [balance, setBalance] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchWallet = async () => {
       try {
-        const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || 'null')
-        if (retailerData && retailerData._id) {
-          const response = await fetch('http://localhost:5200/api/v1/auth/admin/retailers')
+        const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}')
+        const retailerId = retailerData.id || retailerData._id
+        if (retailerId) {
+          const response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers`)
           if (response.ok) {
             const list = await response.json()
-            const current = list.find(r => r._id === retailerData._id)
+            const current = list.find(r => r._id === retailerId)
             if (current && current.walletBalance !== undefined) {
               setBalance(current.walletBalance)
             }

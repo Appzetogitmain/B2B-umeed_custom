@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import MainLayout from '../layouts/MainLayout'
 import Login from '../pages/Auth/Login'
 import Signup from '../pages/Auth/Signup'
+import ResetPassword from '../pages/Auth/ResetPassword'
 import Home from '../pages/Home'
 import Orders from '../pages/Orders'
 import Products from '../pages/Products'
@@ -44,6 +45,7 @@ function AppRoutes() {
 
       <Route path="/retailer/auth" element={<Login />} />
       <Route path="/retailer/signup" element={<Signup />} />
+      <Route path="/retailer/reset-password/:token" element={<ResetPassword />} />
 
       {/* Delivery Auth Routes */}
       <Route path="/delivery/auth/*" element={<DeliveryLogin />} />

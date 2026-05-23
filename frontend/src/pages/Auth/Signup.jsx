@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 
 function Signup() {
   const [form, setForm] = useState({
@@ -101,6 +102,13 @@ function Signup() {
   return (
     <div className="screen-shell flex h-dvh flex-col overflow-y-auto overflow-x-hidden pb-16 pt-4">
       <section className="brand-gradient rounded-2xl px-5 pb-12 pt-9 text-white shadow-[0_10px_24px_rgba(0,168,119,0.24)]">
+        <button 
+          onClick={() => navigate('/retailer/auth')}
+          className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition-all hover:bg-white/25 active:scale-95 border border-white/10"
+          aria-label="Go Back"
+        >
+          <ArrowLeft size={18} />
+        </button>
         <p className="text-xs uppercase tracking-[0.22em] text-[#d6f5ea]">Get Started</p>
         <h1 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-0.01em]">Umeed Retailers</h1>
         <p className="mt-2 max-w-[24ch] text-sm leading-relaxed text-[#d6f5ea]">

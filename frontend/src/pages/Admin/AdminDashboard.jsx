@@ -1,18 +1,5 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-
-const kpiCards = [
-  { title: 'Total Revenue', value: 'Rs 45,231', delta: '+12.5%', icon: '' },
-  { title: 'Total Orders', value: '451', delta: '+5.2%', icon: '' },
-  { title: 'Active Retailers', value: '2,543', delta: '+8.1%', icon: '' },
-  { title: 'Avg Revenue', value: 'Rs 1,240', delta: '+3.8%', icon: '' },
-]
-
-const recentOrders = [
-  { id: '1001', retailer: 'Sharma Retail', amount: 'Rs 2,450', status: 'Completed', date: '2 hours ago' },
-  { id: '1002', retailer: 'Patel Store', amount: 'Rs 1,850', status: 'Pending', date: '4 hours ago' },
-  { id: '1003', retailer: 'Gupta Enterprises', amount: 'Rs 3,200', status: 'Completed', date: '6 hours ago' },
-  { id: '1004', retailer: 'Kumar Distribution', amount: 'Rs 950', status: 'Pending', date: '8 hours ago' },
-]
 
 const quickModules = [
   { title: 'Retailer Management', path: '/admin/retailers', icon: '' },
@@ -26,11 +13,66 @@ const quickModules = [
 ]
 
 function AdminDashboard() {
+  const [dashboardData, setDashboardData] = useState({
+    kpiCards: [],
+    revenueTrend: [],
+    topRetailers: [],
+    recentOrders: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetch('http://localhost:5200/api/v1/dashboard/stats');
+        const data = await response.json();
+        
+        if (response.ok) {
+          setDashboardData({
+            kpiCards: [
+              { title: 'Total Revenue', value: data.kpis.totalRevenue, delta: '+12.5%', icon: '' },
+              { title: 'Total Orders', value: data.kpis.totalOrders, delta: '+5.2%', icon: '' },
+              { title: 'Active Retailers', value: data.kpis.activeRetailers, delta: '+8.1%', icon: '' },
+              { title: 'Avg Revenue', value: data.kpis.avgRevenue, delta: '+3.8%', icon: '' },
+            ],
+            revenueTrend: data.revenueTrend,
+            topRetailers: data.topRetailers,
+            recentOrders: data.recentOrders
+          });
+        } else {
+          setError(data.message || 'Failed to fetch dashboard data');
+        }
+      } catch (err) {
+        setError('Server error, could not fetch dashboard stats');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-slate-500">Loading Dashboard...</div>;
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-500">{error}</div>;
+  }
+  const trendMax = Math.max(...dashboardData.revenueTrend.map(t => t.amount), 1);
+  const xPoints = [20, 120, 220, 320, 420, 520, 640];
+  const points = dashboardData.revenueTrend.map((t, i) => {
+    const x = xPoints[i] || xPoints[xPoints.length - 1];
+    const y = 220 - ((t.amount / trendMax) * 190);
+    return [x, y, t];
+  });
+  const pointsString = points.map(p => `${p[0]},${p[1]}`).join(' ');
+
   return (
     <div className="space-y-6">
       {/* KPI Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map((card) => (
+        {dashboardData.kpiCards.map((card) => (
           <div key={card.title} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -50,7 +92,7 @@ function AdminDashboard() {
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-base font-semibold text-gray-700">Revenue Trend</h2>
           <p className="mt-1 text-sm text-gray-600">Last 7 days performance</p>
-          <div className="mt-6">
+          <div className="mt-6 relative">
             <svg viewBox="0 0 680 260" className="h-56 w-full" aria-hidden="true">
               <defs>
                 <linearGradient id="gradientFill" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -59,22 +101,18 @@ function AdminDashboard() {
                 </linearGradient>
               </defs>
               {/* Grid lines */}
-              {[20, 120, 220, 320, 420, 520, 640].map((x) => (
+              {xPoints.map((x) => (
                 <line key={`grid-${x}`} x1={x} y1="10" x2={x} y2="230" stroke="#e5e7eb" strokeWidth="1" />
               ))}
               {/* Main line */}
-              <polyline points="20,220 120,170 220,185 320,130 420,85 520,65 640,58" fill="none" stroke="#2563eb" strokeWidth="3" strokeLinejoin="round" />
+              <polyline points={pointsString || "20,220"} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinejoin="round" />
               {/* Points */}
-              {[
-                [20, 220],
-                [120, 170],
-                [220, 185],
-                [320, 130],
-                [420, 85],
-                [520, 65],
-                [640, 58],
-              ].map(([x, y], idx) => (
-                <circle key={`point-${idx}`} cx={x} cy={y} r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+              {points.map(([x, y, t], idx) => (
+                <g key={`point-${idx}`}>
+                  <circle cx={x} cy={y} r="5" fill="#2563eb" stroke="#ffffff" strokeWidth="2" />
+                  {/* Tooltip-like text can be added here if needed, but for now just the dots */}
+                  {t && t.amount > 0 && <text x={x} y={y - 10} fontSize="10" fill="#6b7280" textAnchor="middle">Rs {t.amount}</text>}
+                </g>
               ))}
             </svg>
           </div>
@@ -85,11 +123,7 @@ function AdminDashboard() {
           <h2 className="text-base font-semibold text-gray-700">Top Retailers</h2>
           <p className="mt-1 text-sm text-gray-600">By monthly sales volume</p>
           <div className="mt-6 space-y-4">
-            {[
-              { name: 'Sharma Retail', sales: 'Rs 45,231', progress: 92 },
-              { name: 'Patel Store', sales: 'Rs 38,450', progress: 78 },
-              { name: 'Gupta Enterprises', sales: 'Rs 32,120', progress: 65 },
-            ].map((retailer, idx) => (
+            {dashboardData.topRetailers.map((retailer, idx) => (
               <div key={idx} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-700">{retailer.name}</p>
@@ -100,6 +134,9 @@ function AdminDashboard() {
                 </div>
               </div>
             ))}
+            {dashboardData.topRetailers.length === 0 && (
+              <p className="text-sm text-gray-500">No retailers found.</p>
+            )}
           </div>
         </div>
       </div>
@@ -128,15 +165,17 @@ function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {recentOrders.map((order) => (
+              {dashboardData.recentOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-700">{order.id}</td>
                   <td className="px-4 py-3 text-gray-700">{order.retailer}</td>
                   <td className="px-4 py-3 font-semibold text-gray-700">{order.amount}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
-                      order.status === 'Completed'
+                      order.status === 'Completed' || order.status === 'Delivered' || order.status === 'Approved'
                         ? 'bg-green-100 text-green-700'
+                        : order.status === 'Rejected'
+                        ? 'bg-red-100 text-red-700'
                         : 'bg-yellow-100 text-yellow-700'
                     }`}>
                       {order.status}
@@ -145,6 +184,11 @@ function AdminDashboard() {
                   <td className="px-4 py-3 text-gray-600">{order.date}</td>
                 </tr>
               ))}
+              {dashboardData.recentOrders.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="px-4 py-4 text-center text-gray-500">No recent orders.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -171,52 +215,7 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-gray-700">Incentive & Target System</h3>
-          <ul className="mt-4 space-y-2 text-sm text-gray-600">
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Monthly target setup with slabs from Rs 2L to Rs 5L
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Performance tracking against assigned target
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Gift point management and expiry controls
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Rewards and gift distribution approval workflow
-            </li>
-          </ul>
-        </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h3 className="text-base font-semibold text-gray-700">Network Commission Engine</h3>
-          <ul className="mt-4 space-y-2 text-sm text-gray-600">
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Multi-level referral tree view with role-based expansion
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Commission distribution logic for 3-level and unlimited models
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Role-based split policy with live formula preview
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-              Payout transparency through downloadable reports
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
   )
 }

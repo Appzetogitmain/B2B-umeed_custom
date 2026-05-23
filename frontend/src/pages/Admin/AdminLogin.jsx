@@ -6,13 +6,15 @@ function AdminLogin() {
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
 
+  const [isLoading, setIsLoading] = useState(false)
+
   const handleChange = (event) => {
     const { name, value } = event.target
     setCredentials((prev) => ({ ...prev, [name]: value }))
     if (error) setError('')
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!credentials.email.trim() || !credentials.password.trim()) {
@@ -20,11 +22,27 @@ function AdminLogin() {
       return
     }
 
-    if (credentials.email === 'admin@umeed.com' && credentials.password === '123456') {
-      localStorage.setItem('umeed-admin-auth', 'true')
-      navigate('/admin/dashboard', { replace: true })
-    } else {
-      setError('Invalid email or password')
+    try {
+      setIsLoading(true)
+      const response = await fetch('http://localhost:5200/api/v1/auth/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        localStorage.setItem('umeed-admin-auth', 'true')
+        localStorage.setItem('umeed-admin-email', data.email)
+        navigate('/admin/dashboard', { replace: true })
+      } else {
+        setError(data.message || 'Invalid email or password')
+      }
+    } catch (err) {
+      setError('Server error, please try again later')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -84,9 +102,10 @@ function AdminLogin() {
 
             <button
               type="submit"
-              className="h-[44px] w-full rounded-[8px] bg-black px-4 text-[14px] font-medium text-white transition-opacity duration-200 hover:opacity-90"
+              disabled={isLoading}
+              className="h-[44px] w-full rounded-[8px] bg-black px-4 text-[14px] font-medium text-white transition-opacity duration-200 hover:opacity-90 disabled:opacity-50"
             >
-              Login to Admin Panel
+              {isLoading ? 'Logging in...' : 'Login to Admin Panel'}
             </button>
           </form>
         </div>
