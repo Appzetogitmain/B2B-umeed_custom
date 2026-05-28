@@ -31,10 +31,10 @@ function AdminDashboard() {
         if (response.ok) {
           setDashboardData({
             kpiCards: [
-              { title: 'Total Revenue', value: data.kpis.totalRevenue, delta: '+12.5%', icon: '' },
-              { title: 'Total Orders', value: data.kpis.totalOrders, delta: '+5.2%', icon: '' },
-              { title: 'Active Retailers', value: data.kpis.activeRetailers, delta: '+8.1%', icon: '' },
-              { title: 'Avg Revenue', value: data.kpis.avgRevenue, delta: '+3.8%', icon: '' },
+              { title: 'Total Revenue', value: data.kpis.totalRevenue, delta: data.kpis.revenueDelta || '0%', icon: '', link: '/admin/payments-reports' },
+              { title: 'Total Orders', value: data.kpis.totalOrders, delta: data.kpis.ordersDelta || '0%', icon: '', link: '/admin/order-management' },
+              { title: 'Active Retailers', value: data.kpis.activeRetailers, delta: data.kpis.retailersDelta || '0%', icon: '', link: '/admin/retailers' },
+              { title: 'Avg Revenue', value: data.kpis.avgRevenue, delta: data.kpis.avgDelta || '0%', icon: '', link: '/admin/payments-reports' },
             ],
             revenueTrend: data.revenueTrend,
             topRetailers: data.topRetailers,
@@ -73,7 +73,7 @@ function AdminDashboard() {
       {/* KPI Cards Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {dashboardData.kpiCards.map((card) => (
-          <div key={card.title} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <Link key={card.title} to={card.link} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-gray-600">{card.title}</p>
@@ -81,8 +81,8 @@ function AdminDashboard() {
               </div>
               <span className="text-2xl">{card.icon}</span>
             </div>
-            <p className="mt-3 inline-block rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">{card.delta}</p>
-          </div>
+            <p className={`mt-3 inline-block rounded-full px-2.5 py-1 text-xs font-medium ${card.delta.startsWith('-') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{card.delta}</p>
+          </Link>
         ))}
       </div>
 
@@ -148,9 +148,9 @@ function AdminDashboard() {
             <h2 className="text-base font-semibold text-gray-700">Recent Orders</h2>
             <p className="mt-1 text-sm text-gray-600">Latest transactions from retailers</p>
           </div>
-          <button className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <Link to="/admin/order-management" className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
             View All
-          </button>
+          </Link>
         </div>
 
         <div className="mt-6 overflow-x-auto">

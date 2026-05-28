@@ -48,6 +48,32 @@ const retailerSchema = new mongoose.Schema({
     type: String,
     default: 'Rs 0',
   },
+  cashbackBalance: {
+    type: Number,
+    default: 0,
+  },
+  voucherBalance: {
+    type: Number,
+    default: 0,
+  },
+  giftPoints: {
+    type: Number,
+    default: 0,
+  },
+  profitSharing: {
+    tier1: { type: Number, default: 0 },
+    tier2: { type: Number, default: 0 },
+    tier3: { type: Number, default: 0 },
+  },
+  activeCards: {
+    type: Number,
+    default: 0,
+  },
+  membershipTier: {
+    type: String,
+    enum: ['Bronze', 'Silver', 'Gold', 'Platinum', 'Elite Gold'],
+    default: 'Bronze',
+  },
   isWalletFrozen: {
     type: Boolean,
     default: false,

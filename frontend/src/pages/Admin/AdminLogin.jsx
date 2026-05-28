@@ -35,6 +35,7 @@ function AdminLogin() {
       if (response.ok) {
         localStorage.setItem('umeed-admin-auth', 'true')
         localStorage.setItem('umeed-admin-email', data.email)
+        localStorage.setItem('umeed-admin-token', data.token)
         navigate('/admin/dashboard', { replace: true })
       } else {
         setError(data.message || 'Invalid email or password')

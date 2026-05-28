@@ -1,28 +1,25 @@
 import express from 'express';
 import {
   getProducts,
+  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
   updateProductStock
 } from '../controllers/product.controller.js';
+import { protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Get all products
+// Public - retailer app needs these without token for browsing
 router.get('/', getProducts);
+router.get('/:id', getProductById);
 
-// Create Product
-router.post('/', createProduct);
-
-// Update Product Stock
-router.put('/:id/stock', updateProductStock);
-
-// Update Product
-router.put('/:id', updateProduct);
-
-// Delete Product
-router.delete('/:id', deleteProduct);
+// Protected - admin only operations
+router.post('/', protect, createProduct);
+router.put('/:id/stock', protect, updateProductStock);
+router.put('/:id', protect, updateProduct);
+router.delete('/:id', protect, deleteProduct);
 
 export default router;
 

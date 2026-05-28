@@ -10,6 +10,7 @@ function Profile() {
   const handleLogout = () => {
     if (isDeliveryRoute) {
       localStorage.removeItem('umeed-delivery-auth');
+      localStorage.removeItem('umeed-delivery-partner');
       navigate('/delivery/auth', { replace: true });
       return;
     }
@@ -19,11 +20,12 @@ function Profile() {
   };
 
   const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || 'null');
+  const deliveryData = JSON.parse(localStorage.getItem('umeed-delivery-partner') || 'null');
   const isStaff = retailerData?.isStaff === true;
   const staffName = retailerData?.staffName || '';
   const staffRole = retailerData?.staffRole || '';
-  const displayName = isDeliveryRoute ? 'Nadeem Ahmed' : (isStaff ? staffName : (retailerData?.name || 'Umeed Retailer'));
-  const displayId = isDeliveryRoute ? 'DP-44712' : (retailerData?._id ? `RT-${retailerData._id.substring(retailerData._id.length - 6).toUpperCase()}` : 'RT-90817');
+  const displayName = isDeliveryRoute ? (deliveryData?.name || 'Delivery Partner') : (isStaff ? staffName : (retailerData?.name || 'Umeed Retailer'));
+  const displayId = isDeliveryRoute ? (deliveryData?._id ? `DP-${deliveryData._id.substring(deliveryData._id.length - 6).toUpperCase()}` : 'DP-00000') : (retailerData?._id ? `RT-${retailerData._id.substring(retailerData._id.length - 6).toUpperCase()}` : 'RT-00000');
 
   const getInitials = (name) => {
     if (!name) return 'UR';
@@ -32,10 +34,10 @@ function Profile() {
     return name.substring(0, 2).toUpperCase();
   };
 
-  const initials = isDeliveryRoute ? 'DP' : getInitials(displayName);
-  const displayEmail = isDeliveryRoute ? 'nadeem@delivery.com' : (retailerData?.email || 'store.manager@shop.com');
-  const displayPhone = isDeliveryRoute ? '+92 300 1234567' : (retailerData?.phone || '+92 300 1234567');
-  const displayAddress = isDeliveryRoute ? 'Lahore Main Office, PK' : (retailerData?.deliveryAddress || 'Lahore Main Office, PK');
+  const initials = isDeliveryRoute ? getInitials(deliveryData?.name || 'DP') : getInitials(displayName);
+  const displayEmail = isDeliveryRoute ? (deliveryData?.email || '') : (retailerData?.email || '');
+  const displayPhone = isDeliveryRoute ? (deliveryData?.phone || '') : (retailerData?.phone || '');
+  const displayAddress = isDeliveryRoute ? (deliveryData?.city || '') : (retailerData?.deliveryAddress || '');
 
   const [shareOpen, setShareOpen] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);
@@ -184,7 +186,7 @@ function Profile() {
             <div className={`mt-4 mx-auto flex items-center gap-2 ${isStaff ? 'bg-blue-50 text-blue-700 border-blue-100/50' : 'bg-amber-50 text-amber-700 border-amber-100/50'} px-4 py-2 rounded-2xl w-fit border shadow-sm`}>
               {isStaff ? <Users size={16} strokeWidth={2.5} /> : <Award size={16} strokeWidth={2.5} />}
               <span className="text-[10px] font-black uppercase tracking-widest leading-none">
-                {isStaff ? `${staffRole} (Staff)` : 'Elite Gold Member'}
+                {isStaff ? `${staffRole} (Staff)` : (retailerData?.membershipTier || 'Bronze') + ' Member'}
               </span>
             </div>
           </div>
@@ -219,6 +221,7 @@ function Profile() {
               label="Earning Analytics"
               value="Detailed Dashboard"
               hasArrow
+              onClick={() => navigate('/retailer/earnings')}
             />
           )}
         </div>
@@ -251,6 +254,24 @@ function Profile() {
               <p className="text-xs text-slate-400 font-medium mt-1">Invite your retailer partners & unlock premium features together!</p>
             </div>
 
+            {/* SHARE VIA NATIVE SHARE (ALL APPS) */}
+            <button
+              onClick={() => {
+                const shareText = `Hey! Join Umeed B2B Retailer network and order wholesale goods easily using my link: https://umeed.com/retailer/signup?ref=${displayId}`
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'Umeed B2B Retailer Network',
+                    text: shareText,
+                    url: `https://umeed.com/retailer/signup?ref=${displayId}`
+                  }).catch(() => {})
+                }
+              }}
+              className="w-full mb-5 h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-lg shadow-black/10"
+            >
+              <Share2 size={18} />
+              Share via Apps
+            </button>
+
             {/* SHARE ICONS */}
             <div className="grid grid-cols-4 gap-4 mb-6">
               <a
@@ -264,22 +285,46 @@ function Profile() {
                 </div>
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">WhatsApp</span>
               </a>
+              <a
+                href={`https://t.me/share/url?url=https://umeed.com/retailer/signup?ref=${displayId}&text=Hey!%20Join%20Umeed%20B2B%20Retailer%20network`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="h-12 w-12 bg-sky-50 text-sky-600 rounded-[18px] grid place-items-center group-hover:scale-105 transition-transform">
+                  <MessageSquare size={20} />
+                </div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Telegram</span>
+              </a>
+              <a
+                href={`sms:?body=Hey! Join Umeed B2B Retailer network: https://umeed.com/retailer/signup?ref=${displayId}`}
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="h-12 w-12 bg-purple-50 text-purple-600 rounded-[18px] grid place-items-center group-hover:scale-105 transition-transform">
+                  <MessageSquare size={20} />
+                </div>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">SMS</span>
+              </a>
               <div className="flex flex-col items-center gap-2 group cursor-pointer" onClick={handleCopyLink}>
                 <div className="h-12 w-12 bg-blue-50 text-blue-600 rounded-[18px] grid place-items-center group-hover:scale-105 transition-transform">
                   <Copy size={20} />
                 </div>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Copy Link</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Copy</span>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-2xl flex items-center justify-between border border-slate-100">
-              <span className="text-xs font-bold text-slate-500 truncate max-w-[200px]">https://umeed.com/signup?ref={displayId}</span>
-              <button
-                onClick={handleCopyLink}
-                className="text-xs font-black text-black bg-white border border-slate-100 shadow-sm px-4 py-2 rounded-xl active:scale-95 transition-all"
-              >
-                Copy
-              </button>
+            {/* REFERRAL LINK DISPLAY */}
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Your Referral Link</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold text-slate-600 truncate">https://umeed.com/retailer/signup?ref={displayId}</span>
+                <button
+                  onClick={handleCopyLink}
+                  className="text-xs font-black text-black bg-white border border-slate-100 shadow-sm px-4 py-2 rounded-xl active:scale-95 transition-all shrink-0"
+                >
+                  Copy
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -298,9 +343,12 @@ function Profile() {
   )
 }
 
-function ProfileTab({ icon, label, value, hasArrow }) {
+function ProfileTab({ icon, label, value, hasArrow, onClick }) {
   return (
-    <div className="flex items-center justify-between p-6 border-b border-slate-50 last:border-none active:bg-slate-50 transition-colors cursor-pointer group">
+    <div
+      onClick={onClick}
+      className="flex items-center justify-between p-6 border-b border-slate-50 last:border-none active:bg-slate-50 transition-colors cursor-pointer group"
+    >
       <div className="flex items-center gap-5">
         <div className="text-slate-300 group-hover:text-black transition-colors">{icon}</div>
         <div>

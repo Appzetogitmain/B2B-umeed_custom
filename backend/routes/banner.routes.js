@@ -5,19 +5,16 @@ import {
   updateBanner,
   deleteBanner
 } from '../controllers/banner.controller.js';
+import { protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Get all banners
+// Public
 router.get('/', getBanners);
 
-// Create Banner
-router.post('/', createBanner);
-
-// Update Banner
-router.put('/:id', updateBanner);
-
-// Delete Banner
-router.delete('/:id', deleteBanner);
+// Protected (admin)
+router.post('/', protect, createBanner);
+router.put('/:id', protect, updateBanner);
+router.delete('/:id', protect, deleteBanner);
 
 export default router;

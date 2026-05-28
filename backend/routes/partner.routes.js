@@ -3,14 +3,17 @@ import {
   getPartners,
   createPartner,
   updatePartner,
-  deletePartner
+  deletePartner,
+  loginPartner
 } from '../controllers/partner.controller.js';
+import { protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/', getPartners);
-router.post('/', createPartner);
-router.put('/:id', updatePartner);
-router.delete('/:id', deletePartner);
+router.get('/', protect, getPartners);
+router.post('/', protect, createPartner);
+router.post('/login', loginPartner);
+router.put('/:id', protect, updatePartner);
+router.delete('/:id', protect, deletePartner);
 
 export default router;
