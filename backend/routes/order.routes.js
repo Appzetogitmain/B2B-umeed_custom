@@ -1,27 +1,32 @@
 import express from 'express';
 import {
   getOrders,
+  getOrderById,
   createOrder,
   updateOrderStatus,
   assignDeliveryPartner,
   deleteOrder
 } from '../controllers/order.controller.js';
+import { protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
 // Get all orders
-router.get('/', getOrders);
+router.get('/', protect, getOrders);
+
+// Get single order by ID
+router.get('/:id', protect, getOrderById);
 
 // Create order
-router.post('/', createOrder);
+router.post('/', protect, createOrder);
 
 // Update order status (approve / reject)
-router.put('/:id/status', updateOrderStatus);
+router.put('/:id/status', protect, updateOrderStatus);
 
 // Assign delivery partner
-router.put('/:id/assign', assignDeliveryPartner);
+router.put('/:id/assign', protect, assignDeliveryPartner);
 
 // Delete order record permanently
-router.delete('/:id', deleteOrder);
+router.delete('/:id', protect, deleteOrder);
 
 export default router;

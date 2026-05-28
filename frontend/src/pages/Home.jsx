@@ -99,6 +99,12 @@ function Home() {
   const [dynamicProducts, setDynamicProducts] = useState([])
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState(null)
+
+  // Get logged-in retailer name from localStorage
+  const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}')
+  const retailerName = retailerData?.name || 'Umeed Retailer'
 
   const getBackendUrl = () => {
     const hostname = window.location.hostname;
@@ -195,6 +201,80 @@ function Home() {
     return () => clearInterval(interval)
   }, [dynamicBanners])
 
+  // Search products from DB (case-insensitive, debounced)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null)
+      return
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const query = encodeURIComponent(searchQuery.trim())
+        const [prodRes, catRes] = await Promise.all([
+          fetch(`${getBackendUrl()}/api/v1/products?search=${query}`),
+          fetch(`${getBackendUrl()}/api/v1/categories`)
+        ])
+
+        let results = []
+
+        // Get matching products by name/SKU
+        if (prodRes.ok) {
+          const prodData = await prodRes.json()
+          results = prodData.map(p => ({
+            id: p._id,
+            category: p.category,
+            name: p.name,
+            price: p.price,
+            originalPrice: p.mrp,
+            discount: p.discount ? `${p.discount}% OFF` : '',
+            image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+            stock: p.stock
+          }))
+        }
+
+        // Also search by category name (case-insensitive)
+        if (catRes.ok) {
+          const catData = await catRes.json()
+          const matchingCats = catData.filter(c =>
+            c.categoryName.toLowerCase().includes(searchQuery.trim().toLowerCase())
+          )
+          if (matchingCats.length > 0) {
+            // Fetch all products and filter by matching category names
+            const allProdRes = await fetch(`${getBackendUrl()}/api/v1/products`)
+            if (allProdRes.ok) {
+              const allProds = await allProdRes.json()
+              const catNames = matchingCats.map(c => c.categoryName.toLowerCase())
+              const catProducts = allProds
+                .filter(p => catNames.some(cn => p.category.toLowerCase().includes(cn) || cn.includes(p.category.toLowerCase())))
+                .map(p => ({
+                  id: p._id,
+                  category: p.category,
+                  name: p.name,
+                  price: p.price,
+                  originalPrice: p.mrp,
+                  discount: p.discount ? `${p.discount}% OFF` : '',
+                  image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+                  stock: p.stock
+                }))
+              // Merge without duplicates
+              const existingIds = new Set(results.map(r => r.id))
+              catProducts.forEach(p => {
+                if (!existingIds.has(p.id)) {
+                  results.push(p)
+                }
+              })
+            }
+          }
+        }
+
+        setSearchResults(results)
+      } catch (err) {
+        console.error('Search error:', err)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   const products = [
     // Grocery | Kitchen
     { id: '1', category: 'Grocery | Kitchen', name: 'Sharbati Atta 10kg', price: 540, originalPrice: 600, discount: '10% OFF', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=300' },
@@ -254,23 +334,25 @@ function Home() {
 
   const activeProducts = dynamicProducts.length > 0 ? dynamicProducts : products;
 
-  const filteredProducts = selectedCategory === 'All'
-    ? activeProducts
-    : activeProducts.filter(p => {
-      const catLower = selectedCategory.toLowerCase().trim()
-      const prodCatLower = p.category.toLowerCase().trim()
-      
-      // Direct matching
-      if (prodCatLower.includes(catLower) || catLower.includes(prodCatLower)) {
-        return true
-      }
-      
-      // Dynamic intersection matching (e.g. "Snacks & Biscuits" matches "Drinks | Noodles | Snacks" by matching "snacks")
-      const catWords = catLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
-      const prodWords = prodCatLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
-      
-      return catWords.some(cw => prodWords.some(pw => pw.includes(cw) || cw.includes(pw)))
-    })
+  const filteredProducts = searchResults !== null
+    ? searchResults
+    : selectedCategory === 'All'
+      ? activeProducts
+      : activeProducts.filter(p => {
+        const catLower = selectedCategory.toLowerCase().trim()
+        const prodCatLower = p.category.toLowerCase().trim()
+        
+        // Direct matching
+        if (prodCatLower.includes(catLower) || catLower.includes(prodCatLower)) {
+          return true
+        }
+        
+        // Dynamic intersection matching
+        const catWords = catLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
+        const prodWords = prodCatLower.split(/[\s&|,-]+/).filter(w => w.length > 2)
+        
+        return catWords.some(cw => prodWords.some(pw => pw.includes(cw) || cw.includes(pw)))
+      })
 
   const handleAdd = (product) => {
     addToCart(product)
@@ -283,8 +365,8 @@ function Home() {
       {/* COMPACT HEADER */}
       <header className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Umeed Retailers</h1>
-          <p className="text-[11px] text-slate-400 font-medium">Retailer Portal</p>
+          <p className="text-[11px] text-slate-400 font-medium">Welcome back,</p>
+          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">{retailerName}</h1>
         </div>
         <Link to="/retailer/cart" className="relative h-10 w-10 grid place-items-center bg-white rounded-xl shadow-sm border border-slate-100 transition-all active:scale-90">
           <CartIcon size={18} className="text-[#0F172A]" />
@@ -302,6 +384,8 @@ function Home() {
         <input
           type="text"
           placeholder="Search items..."
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); if (!e.target.value.trim()) setSelectedCategory('All'); }}
           className="w-full h-11 pl-10 pr-4 bg-white rounded-xl border border-slate-100 shadow-sm outline-none focus:border-black text-xs transition-all"
         />
       </div>

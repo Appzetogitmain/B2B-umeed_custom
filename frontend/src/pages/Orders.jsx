@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Package, Clock, ChevronRight, Filter, Search } from 'lucide-react'
 
 const getBackendUrl = () => {
@@ -13,9 +14,12 @@ function formatCurrency(value) {
 }
 
 function Orders() {
-  const [activeTab, setActiveTab] = useState('active')
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('pending')
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showFilter, setShowFilter] = useState(false)
+  const [sortOrder, setSortOrder] = useState('newest')
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -41,10 +45,20 @@ function Orders() {
     fetchOrders()
   }, [])
 
-  const activeOrders = orders.filter(o => !['Delivered', 'Rejected', 'Failed'].includes(o.status))
+  const pendingOrders = orders.filter(o => o.status === 'Pending')
+  const activeOrders = orders.filter(o => ['Approved', 'Packed', 'Out for Delivery'].includes(o.status))
   const historyOrders = orders.filter(o => ['Delivered', 'Rejected', 'Failed'].includes(o.status))
 
-  const currentOrders = activeTab === 'active' ? activeOrders : historyOrders
+  const sortOrders = (list) => {
+    const sorted = [...list]
+    if (sortOrder === 'newest') sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    else if (sortOrder === 'oldest') sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    else if (sortOrder === 'highest') sorted.sort((a, b) => b.totalAmount - a.totalAmount)
+    else if (sortOrder === 'lowest') sorted.sort((a, b) => a.totalAmount - b.totalAmount)
+    return sorted
+  }
+
+  const currentOrders = sortOrders(activeTab === 'pending' ? pendingOrders : activeTab === 'active' ? activeOrders : historyOrders)
 
   return (
     <div className="pb-4 px-4 pt-4 bg-[#F8FAFC] min-h-full">
@@ -53,13 +67,55 @@ function Orders() {
           <h1 className="text-3xl font-extrabold text-[#0F172A] tracking-tight">Your Orders</h1>
           <p className="text-sm text-slate-500 font-medium mt-1">Track wholesale shipments</p>
         </div>
-        <button className="h-12 w-12 grid place-items-center bg-white rounded-2xl shadow-sm border border-slate-100">
+        <button
+          onClick={() => setShowFilter(!showFilter)}
+          className={`h-12 w-12 grid place-items-center bg-white rounded-2xl shadow-sm border border-slate-100 ${showFilter ? 'ring-2 ring-black' : ''}`}
+        >
           <Filter size={20} className="text-slate-600" />
         </button>
       </header>
 
+      {/* FILTER DROPDOWN */}
+      {showFilter && (
+        <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-slate-50">
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Sort By</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setSortOrder('newest')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortOrder === 'newest' ? 'bg-black text-white' : 'bg-slate-100 text-slate-500'}`}
+            >
+              Newest
+            </button>
+            <button
+              onClick={() => setSortOrder('oldest')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortOrder === 'oldest' ? 'bg-black text-white' : 'bg-slate-100 text-slate-500'}`}
+            >
+              Oldest
+            </button>
+            <button
+              onClick={() => setSortOrder('highest')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortOrder === 'highest' ? 'bg-black text-white' : 'bg-slate-100 text-slate-500'}`}
+            >
+              Highest ₹
+            </button>
+            <button
+              onClick={() => setSortOrder('lowest')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${sortOrder === 'lowest' ? 'bg-black text-white' : 'bg-slate-100 text-slate-500'}`}
+            >
+              Lowest ₹
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* TABS */}
       <div className="flex bg-slate-100 p-1.5 rounded-[20px] mb-8">
+        <button 
+          onClick={() => setActiveTab('pending')}
+          className={`flex-1 py-3.5 text-xs font-black uppercase tracking-widest rounded-2xl transition-all ${activeTab === 'pending' ? 'bg-white text-black shadow-sm' : 'text-slate-400'}`}
+        >
+          Pending
+        </button>
         <button 
           onClick={() => setActiveTab('active')}
           className={`flex-1 py-3.5 text-xs font-black uppercase tracking-widest rounded-2xl transition-all ${activeTab === 'active' ? 'bg-white text-black shadow-sm' : 'text-slate-400'}`}
@@ -124,9 +180,12 @@ function Orders() {
                   </div>
                 </div>
 
-                <button className="w-full h-14 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center justify-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest transition-colors">
+                <button
+                  onClick={() => navigate(`/retailer/order/${order._id}`)}
+                  className="w-full h-14 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center justify-center gap-2 text-xs font-black text-slate-500 uppercase tracking-widest transition-colors"
+                >
                   <Clock size={16} />
-                  View Tracking
+                  View Details
                   <ChevronRight size={14} />
                 </button>
               </div>

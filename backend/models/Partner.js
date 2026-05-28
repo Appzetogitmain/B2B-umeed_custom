@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const partnerSchema = new mongoose.Schema({
   name: {
@@ -14,6 +15,11 @@ const partnerSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: true,
   },
   vehicleType: {
     type: String,
@@ -42,6 +48,19 @@ const partnerSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Hash password before saving
+partnerSchema.pre('save', async function() {
+  if (!this.isModified('password')) {
+    return;
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+partnerSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 const Partner = mongoose.model('Partner', partnerSchema);
 

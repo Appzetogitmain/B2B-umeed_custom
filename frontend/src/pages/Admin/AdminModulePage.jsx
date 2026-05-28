@@ -131,6 +131,7 @@ const partnerInitialForm = {
   name: '',
   phone: '',
   email: '',
+  password: '',
   vehicleType: 'Bike',
   vehicleNumber: '',
   city: '',
@@ -3006,6 +3007,18 @@ function AdminModulePage() {
                 readOnly={isReadOnly}
                 className={baseInputClass(isReadOnly)}
                 required
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                type="password"
+                value={partnerForm.password || ''}
+                onChange={(e) => setPartnerForm((prev) => ({ ...prev, password: e.target.value }))}
+                readOnly={isReadOnly}
+                className={baseInputClass(isReadOnly)}
+                placeholder={modalMode === 'edit' ? 'Leave blank to keep current' : 'Min 6 characters'}
+                required={modalMode === 'add'}
+                minLength={modalMode === 'add' ? 6 : undefined}
               />
             </Field>
             <Field label="Vehicle Type">

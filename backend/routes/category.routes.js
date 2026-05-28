@@ -5,19 +5,16 @@ import {
   updateCategory,
   deleteCategory
 } from '../controllers/category.controller.js';
+import { protect } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Get all categories
+// Public
 router.get('/', getCategories);
 
-// Create Category
-router.post('/', createCategory);
-
-// Update Category
-router.put('/:id', updateCategory);
-
-// Delete Category
-router.delete('/:id', deleteCategory);
+// Protected (admin)
+router.post('/', protect, createCategory);
+router.put('/:id', protect, updateCategory);
+router.delete('/:id', protect, deleteCategory);
 
 export default router;

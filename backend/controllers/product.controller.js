@@ -10,7 +10,8 @@ export const getProducts = async (req, res) => {
       query = {
         $or: [
           { name: { $regex: search, $options: 'i' } },
-          { sku: { $regex: search, $options: 'i' } }
+          { sku: { $regex: search, $options: 'i' } },
+          { category: { $regex: search, $options: 'i' } }
         ]
       };
     }
@@ -19,6 +20,21 @@ export const getProducts = async (req, res) => {
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ message: 'Error fetching products' });
+  }
+};
+
+// Get single product by ID
+export const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(product);
+  } catch (error) {
+    console.error('Get product by ID error:', error);
+    res.status(500).json({ message: 'Error fetching product' });
   }
 };
 

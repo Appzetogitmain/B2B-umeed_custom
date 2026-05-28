@@ -3,6 +3,7 @@ import Admin from '../models/Admin.js';
 import cloudinary from '../config/cloudinary.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { generateToken } from '../middlewares/auth.js';
 
 export const registerRetailer = async (req, res) => {
   try {
@@ -147,6 +148,7 @@ export const loginRetailer = async (req, res) => {
     const retailer = await Retailer.findOne({ email });
 
     if (retailer && (await retailer.matchPassword(password))) {
+      const token = generateToken(retailer._id, 'retailer');
       res.json({
         _id: retailer._id,
         name: retailer.name,
@@ -154,6 +156,8 @@ export const loginRetailer = async (req, res) => {
         phone: retailer.phone,
         deliveryAddress: retailer.deliveryAddress,
         partners: retailer.partners || [],
+        membershipTier: retailer.membershipTier || 'Bronze',
+        token,
         shopName: retailer.shopName || '',
         shopType: retailer.shopType || '',
         addressAsPerAadhaar: retailer.addressAsPerAadhaar || '',
@@ -258,6 +262,7 @@ export const loginRetailerPartner = async (req, res) => {
       staffName: partner.name,
       staffPhone: partner.phone,
       staffRole: partner.role,
+      token: generateToken(retailer._id, 'retailer'),
       message: 'Staff / Partner logged in successfully'
     });
   } catch (error) {
@@ -623,11 +628,13 @@ export const loginAdmin = async (req, res) => {
     }
     const admin = await Admin.findOne({ email });
     if (admin && (await admin.matchPassword(password))) {
+      const token = generateToken(admin._id, 'admin');
       res.json({
         _id: admin._id,
         name: admin.name,
         email: admin.email,
         role: admin.role,
+        token,
         message: 'Admin logged in successfully'
       });
     } else {

@@ -12,11 +12,13 @@ import Cart from '../pages/Cart'
 import OrderDetail from '../pages/OrderDetail'
 import ProductDetail from '../pages/ProductDetail'
 import Settings from '../pages/Settings'
+import EarningAnalytics from '../pages/EarningAnalytics'
 import AdminLogin from '../pages/Admin/AdminLogin'
 import AdminDashboard from '../pages/Admin/AdminDashboard'
 import AdminModulePage from '../pages/Admin/AdminModulePage'
 import AdminLayout from '../layouts/AdminLayout'
 import RequireAdminAuth from './RequireAdminAuth'
+import RequireRetailerAuth from './RequireRetailerAuth'
 import DeliveryLogin from '../pages/Delivery/DeliveryLogin'
 import RequireDeliveryAuth from './RequireDeliveryAuth'
 import DeliveryHome from '../pages/Delivery/DeliveryHome'
@@ -27,8 +29,8 @@ import DeliveryPerformance from '../pages/Delivery/DeliveryPerformance'
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/retailer/auth" replace />} />
-      <Route path="/admin/auth" element={<AdminLogin />} />
+      <Route path="/" element={<SmartRedirect />} />
+      <Route path="/admin/auth" element={<AdminAuthRoute />} />
 
       <Route
         path="/admin"
@@ -43,15 +45,22 @@ function AppRoutes() {
         <Route path=":module" element={<AdminModulePage />} />
       </Route>
 
-      <Route path="/retailer/auth" element={<Login />} />
+      <Route path="/retailer/auth" element={<RetailerAuthRoute />} />
       <Route path="/retailer/signup" element={<Signup />} />
       <Route path="/retailer/reset-password/:token" element={<ResetPassword />} />
 
       {/* Delivery Auth Routes */}
-      <Route path="/delivery/auth/*" element={<DeliveryLogin />} />
+      <Route path="/delivery/auth/*" element={<DeliveryAuthRoute />} />
 
 
-      <Route path="/retailer" element={<MainLayout />}>
+      <Route
+        path="/retailer"
+        element={
+          <RequireRetailerAuth>
+            <MainLayout />
+          </RequireRetailerAuth>
+        }
+      >
         <Route index element={<Navigate to="/retailer/home" replace />} />
         <Route path="home" element={<Home />} />
         <Route path="orders" element={<Orders />} />
@@ -61,6 +70,7 @@ function AppRoutes() {
         <Route path="wallet" element={<Wallet />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="earnings" element={<EarningAnalytics />} />
         <Route path="cart" element={<Cart />} />
       </Route>
 
@@ -84,6 +94,36 @@ function AppRoutes() {
       <Route path="*" element={<Navigate to="/retailer/auth" replace />} />
     </Routes>
   );
+}
+
+// Helper components to avoid render-time redirect loops
+function SmartRedirect() {
+  const isRetailerLoggedIn = !!localStorage.getItem('umeed-retailer')
+  const isDeliveryLoggedIn = localStorage.getItem('umeed-delivery-auth') === 'true'
+  const isAdminLoggedIn = localStorage.getItem('umeed-admin-auth') === 'true'
+
+  if (isRetailerLoggedIn) return <Navigate to="/retailer/home" replace />
+  if (isDeliveryLoggedIn) return <Navigate to="/delivery/home" replace />
+  if (isAdminLoggedIn) return <Navigate to="/admin/dashboard" replace />
+  return <Navigate to="/retailer/auth" replace />
+}
+
+function AdminAuthRoute() {
+  const isAdminLoggedIn = localStorage.getItem('umeed-admin-auth') === 'true'
+  if (isAdminLoggedIn) return <Navigate to="/admin/dashboard" replace />
+  return <AdminLogin />
+}
+
+function RetailerAuthRoute() {
+  const isRetailerLoggedIn = !!localStorage.getItem('umeed-retailer')
+  if (isRetailerLoggedIn) return <Navigate to="/retailer/home" replace />
+  return <Login />
+}
+
+function DeliveryAuthRoute() {
+  const isDeliveryLoggedIn = localStorage.getItem('umeed-delivery-auth') === 'true'
+  if (isDeliveryLoggedIn) return <Navigate to="/delivery/home" replace />
+  return <DeliveryLogin />
 }
 
 export default AppRoutes;
