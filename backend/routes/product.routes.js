@@ -2,7 +2,6 @@ import express from 'express';
 import {
   getProducts,
   getProductById,
-  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -13,7 +12,6 @@ import { upload } from '../utils/imageUpload.js';
 
 const router = express.Router();
 
-// Public - retailer app needs these without token for browsing
 // Public - retailer app needs these without token for browsing
 router.get('/', getProducts);
 router.get('/:id', getProductById);
