@@ -1,5 +1,12 @@
 import Product from '../models/Product.js';
-import cloudinary from '../config/cloudinary.js';
+import { processAndSaveImage } from '../utils/imageUpload.js';
+import { deleteImage } from '../utils/imageDelete.js';
+
+// Helper to convert base64 to buffer if needed
+const getBufferFromBase64 = (base64Str) => {
+  const base64Data = base64Str.replace(/^data:image\/\w+;base64,/, "");
+  return Buffer.from(base64Data, 'base64');
+};
 
 // Get all products
 export const getProducts = async (req, res) => {
@@ -49,24 +56,38 @@ export const createProduct = async (req, res) => {
 
     // Process and upload images in parallel
     let uploadedImages = [];
+    
+    // Support both Multer array files and Base64 body images
+    const filesToProcess = req.files ? req.files : [];
+    
+    // Process Multer files if any
+    if (filesToProcess.length > 0) {
+      try {
+        const uploadPromises = filesToProcess.map(file => processAndSaveImage(file.buffer, 'menu'));
+        uploadedImages = await Promise.all(uploadPromises);
+      } catch (err) {
+        console.error('Product image upload error:', err);
+        return res.status(500).json({ message: 'Error processing local images' });
+      }
+    }
+    
+    // Process Base64 images if frontend still sends them
     if (Array.isArray(images)) {
       try {
-        const uploadPromises = images.map(async (img) => {
+        const base64UploadPromises = images.map(async (img) => {
           if (img && img.startsWith('data:image')) {
-            const uploadRes = await cloudinary.uploader.upload(img, {
-              folder: 'umeed_products',
-            });
-            return uploadRes.secure_url;
+            const buffer = getBufferFromBase64(img);
+            return await processAndSaveImage(buffer, 'menu');
           } else if (img) {
-            return img;
+            return img; // already a URL
           }
           return null;
         });
-        const results = await Promise.all(uploadPromises);
-        uploadedImages = results.filter(url => url !== null);
+        const results = await Promise.all(base64UploadPromises);
+        uploadedImages = [...uploadedImages, ...results.filter(url => url !== null)];
       } catch (err) {
-        console.error('Cloudinary product upload error:', err);
-        return res.status(500).json({ message: 'Error uploading images to Cloudinary' });
+        console.error('Product base64 upload error:', err);
+        return res.status(500).json({ message: 'Error uploading base64 images locally' });
       }
     }
 
@@ -100,33 +121,58 @@ export const updateProduct = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    // Determine old images to find which ones were removed
+    const oldImages = product.images || [];
+    
     // Process and upload images in parallel
     let uploadedImages = [];
+    
+    // Process Multer files if any
+    if (req.files && req.files.length > 0) {
+      try {
+        const uploadPromises = req.files.map(file => processAndSaveImage(file.buffer, 'menu'));
+        uploadedImages = await Promise.all(uploadPromises);
+      } catch (err) {
+        console.error('Product image upload error:', err);
+        return res.status(500).json({ message: 'Error processing local images' });
+      }
+    }
+
+    // Process Base64 images if frontend still sends them
+    let retainedImages = [];
     if (Array.isArray(images)) {
       try {
-        const uploadPromises = images.map(async (img) => {
+        const base64UploadPromises = images.map(async (img) => {
           if (img && img.startsWith('data:image')) {
-            const uploadRes = await cloudinary.uploader.upload(img, {
-              folder: 'umeed_products',
-            });
-            return uploadRes.secure_url;
+            const buffer = getBufferFromBase64(img);
+            return await processAndSaveImage(buffer, 'menu');
           } else if (img) {
+            retainedImages.push(img);
             return img;
           }
           return null;
         });
-        const results = await Promise.all(uploadPromises);
-        uploadedImages = results.filter(url => url !== null);
+        const results = await Promise.all(base64UploadPromises);
+        uploadedImages = [...uploadedImages, ...results.filter(url => url !== null && !retainedImages.includes(url))];
       } catch (err) {
-        console.error('Cloudinary product upload error:', err);
-        return res.status(500).json({ message: 'Error uploading image to Cloudinary' });
+        console.error('Product base64 upload error:', err);
+        return res.status(500).json({ message: 'Error uploading base64 images locally' });
       }
+    }
+
+    // The final images list is retained images + newly uploaded images
+    const finalImages = [...retainedImages, ...uploadedImages];
+
+    // Delete removed images from local storage
+    const removedImages = oldImages.filter(img => !finalImages.includes(img));
+    for (const removedImg of removedImages) {
+      deleteImage(removedImg);
     }
 
     product.name = name || product.name;
     product.category = category || product.category;
     product.variantName = variantName !== undefined ? variantName : product.variantName;
-    product.images = uploadedImages;
+    product.images = finalImages;
     product.price = price !== undefined ? Number(price) : product.price;
     product.mrp = mrp !== undefined ? Number(mrp) : product.mrp;
     product.discount = discount !== undefined ? Number(discount) : product.discount;
@@ -149,6 +195,14 @@ export const deleteProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+    
+    // Clean up local images
+    if (product.images && Array.isArray(product.images)) {
+      for (const imgUrl of product.images) {
+        deleteImage(imgUrl);
+      }
+    }
+
     await product.deleteOne(); // Direct delete from database
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
@@ -180,4 +234,3 @@ export const updateProductStock = async (req, res) => {
     res.status(500).json({ message: 'Error updating product stock' });
   }
 };
-

@@ -1,6 +1,6 @@
 import Retailer from '../models/Retailer.js';
 import Admin from '../models/Admin.js';
-import cloudinary from '../config/cloudinary.js';
+import { processAndSaveImage } from '../utils/imageUpload.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { generateToken } from '../middlewares/auth.js';
@@ -31,19 +31,20 @@ export const registerRetailer = async (req, res) => {
       return res.status(400).json({ message: 'Retailer with this email already exists' });
     }
 
-    // Upload photo to Cloudinary if provided
+    // Upload photo if provided
     let photoUrl = '';
+    
+    // Support Base64 image
     if (photo && photo.startsWith('data:image')) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(photo, {
-          folder: 'umeed_retailers'
-        });
-        photoUrl = uploadRes.secure_url;
+        const base64Data = photo.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+        photoUrl = await processAndSaveImage(buffer, 'users');
       } catch (err) {
-        console.error('Cloudinary upload error during signup:', err);
+        console.error('Local upload error during signup:', err);
       }
     } else if (photo) {
-      photoUrl = photo;
+      photoUrl = photo; // already a URL
     }
 
     // Create retailer
@@ -323,17 +324,17 @@ export const createAdminRetailer = async (req, res) => {
 
     // Upload photo if provided
     let photoUrl = '';
+    
     if (photo && photo.startsWith('data:image')) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(photo, {
-          folder: 'umeed_retailers'
-        });
-        photoUrl = uploadRes.secure_url;
+        const base64Data = photo.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+        photoUrl = await processAndSaveImage(buffer, 'users');
       } catch (err) {
-        console.error('Cloudinary upload error:', err);
+        console.error('Local upload error:', err);
       }
     } else if (photo) {
-      photoUrl = photo;
+      photoUrl = photo; // already a URL
     }
 
     // Create retailer
@@ -434,15 +435,14 @@ export const updateAdminRetailer = async (req, res) => {
     let photoUrl = retailer.photo || '';
     if (photo && photo.startsWith('data:image')) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(photo, {
-          folder: 'umeed_retailers'
-        });
-        photoUrl = uploadRes.secure_url;
+        const base64Data = photo.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+        photoUrl = await processAndSaveImage(buffer, 'users');
       } catch (err) {
-        console.error('Cloudinary upload error during update:', err);
+        console.error('Local upload error during update:', err);
       }
     } else if (photo) {
-      photoUrl = photo;
+      photoUrl = photo; // already a URL
     }
 
     // Update fields

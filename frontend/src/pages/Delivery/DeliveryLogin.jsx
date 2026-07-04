@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 
 function DeliveryLogin() {
   const navigate = useNavigate()
   const [credentials, setCredentials] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const isDeliveryAuthenticated = localStorage.getItem('umeed-delivery-auth') === 'true'
 
   const getBackendUrl = () => {
@@ -104,17 +106,26 @@ function DeliveryLogin() {
               <label htmlFor="password" className="mb-2 block text-xs font-medium text-slate-600">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                value={credentials.password}
-                onChange={handleChange}
-                className="w-full h-12 px-4 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:border-black focus:ring-2 focus:ring-slate-100 transition-all text-sm text-slate-700"
-                autoComplete="current-password"
-                required
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  className="w-full h-12 pl-4 pr-12 bg-slate-50 rounded-xl border border-slate-200 outline-none focus:border-black focus:ring-2 focus:ring-slate-100 transition-all text-sm text-slate-700"
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <button type="submit" disabled={submitting} className="w-full h-14 bg-black py-3.5 rounded-2xl text-white font-bold text-sm shadow-lg active:scale-[0.98] transition-all mt-2 disabled:opacity-70">

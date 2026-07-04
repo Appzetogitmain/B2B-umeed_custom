@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn, ArrowRight, ShieldCheck, ArrowLeft, Mail } from 'lucide-react'
+import { LogIn, ArrowRight, ShieldCheck, ArrowLeft, Mail, Eye, EyeOff } from 'lucide-react'
 
 function Login() {
   const [loginType, setLoginType] = useState('owner') // 'owner' or 'partner'
@@ -14,6 +14,7 @@ function Login() {
   const [forgotSuccess, setForgotSuccess] = useState('')
   const [forgotError, setForgotError] = useState('')
   const [forgotSubmitting, setForgotSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleForgotSubmit = async (event) => {
     event.preventDefault()
@@ -253,15 +254,24 @@ function Login() {
 
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Access Password</label>
-                      <input
-                        name="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={form.password}
-                        onChange={handleChange}
-                        className="w-full h-14 px-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
-                        required
-                      />
+                      <div className="relative">
+                        <input
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={form.password}
+                          onChange={handleChange}
+                          className="w-full h-14 pl-4 pr-12 bg-slate-50 rounded-2xl border border-slate-100 outline-none focus:border-black focus:ring-4 focus:ring-slate-100 transition-all font-medium text-sm text-[#0F172A]"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-slate-400 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex justify-end">

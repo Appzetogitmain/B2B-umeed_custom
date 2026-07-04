@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
 import { seedDefaultAdmin } from './utils/seedAdmin.js';
 import authRoutes from './routes/auth.routes.js';
@@ -60,6 +62,12 @@ connectDB().then(async () => {
 });
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static images
+app.use('/images', express.static(path.join(__dirname, 'uploads/images')));
 
 // Body parser
 app.use(express.json({ limit: '50mb' }));

@@ -16,6 +16,7 @@ const getBackendUrl = () => {
 
 function Cart() {
   const { cartItems, totalPrice, increaseQuantity, decreaseQuantity, removeItem, clearCart } = useCart()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const isCheckoutOpen = searchParams.get('checkout') === 'true'
 
@@ -208,7 +209,7 @@ function Cart() {
             <ShoppingBag size={24} />
           </div>
           <h2 className="text-base font-bold text-slate-800">Your cart is empty</h2>
-          <button className="mt-4 text-xs font-black text-black uppercase tracking-widest underline decoration-2 underline-offset-4">
+          <button onClick={() => navigate('/retailer/home')} className="mt-4 text-xs font-black text-black uppercase tracking-widest underline decoration-2 underline-offset-4">
             Browse Products
           </button>
         </div>

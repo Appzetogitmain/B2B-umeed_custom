@@ -1,5 +1,12 @@
 import Category from '../models/Category.js';
-import cloudinary from '../config/cloudinary.js';
+import { processAndSaveImage } from '../utils/imageUpload.js';
+import { deleteImage } from '../utils/imageDelete.js';
+
+// Helper to convert base64 to buffer if needed
+const getBufferFromBase64 = (base64Str) => {
+  const base64Data = base64Str.replace(/^data:image\/\w+;base64,/, "");
+  return Buffer.from(base64Data, 'base64');
+};
 
 // Get all categories
 export const getCategories = async (req, res) => {
@@ -22,18 +29,27 @@ export const createCategory = async (req, res) => {
     }
 
     let imageUrl = '';
-    if (image && image.startsWith('data:image')) {
+    
+    // Process Multer file if uploaded
+    if (req.file) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(image, {
-          folder: 'umeed_categories',
-        });
-        imageUrl = uploadRes.secure_url;
+        imageUrl = await processAndSaveImage(req.file.buffer, 'logos');
       } catch (err) {
-        console.error('Cloudinary upload error:', err);
-        return res.status(500).json({ message: 'Error uploading image to Cloudinary' });
+        console.error('Local category upload error:', err);
+        return res.status(500).json({ message: 'Error uploading category image locally' });
+      }
+    } 
+    // Process Base64 image if sent by frontend
+    else if (image && image.startsWith('data:image')) {
+      try {
+        const buffer = getBufferFromBase64(image);
+        imageUrl = await processAndSaveImage(buffer, 'logos');
+      } catch (err) {
+        console.error('Local category base64 upload error:', err);
+        return res.status(500).json({ message: 'Error uploading base64 image locally' });
       }
     } else if (image) {
-      imageUrl = image;
+      imageUrl = image; // already a URL
     }
 
     const category = await Category.create({
@@ -60,17 +76,38 @@ export const updateCategory = async (req, res) => {
     }
 
     let imageUrl = category.image;
-    if (image && image.startsWith('data:image')) {
+    
+    // Process Multer file if uploaded
+    if (req.file) {
       try {
-        const uploadRes = await cloudinary.uploader.upload(image, {
-          folder: 'umeed_categories',
-        });
-        imageUrl = uploadRes.secure_url;
+        imageUrl = await processAndSaveImage(req.file.buffer, 'logos');
+        // Delete old image
+        if (category.image && category.image !== imageUrl) {
+          deleteImage(category.image);
+        }
       } catch (err) {
-        console.error('Cloudinary upload error:', err);
+        console.error('Local category upload error:', err);
         return res.status(500).json({ message: 'Error uploading image' });
       }
+    } 
+    // Process Base64 image if sent by frontend
+    else if (image && image.startsWith('data:image')) {
+      try {
+        const buffer = getBufferFromBase64(image);
+        imageUrl = await processAndSaveImage(buffer, 'logos');
+        // Delete old image
+        if (category.image && category.image !== imageUrl) {
+          deleteImage(category.image);
+        }
+      } catch (err) {
+        console.error('Local category base64 upload error:', err);
+        return res.status(500).json({ message: 'Error uploading image locally' });
+      }
     } else if (image !== undefined) {
+      if (image !== category.image) {
+         // Different URL provided, maybe clear image
+         if (category.image) deleteImage(category.image);
+      }
       imageUrl = image;
     }
 
@@ -93,6 +130,11 @@ export const deleteCategory = async (req, res) => {
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }
+    
+    if (category.image) {
+      deleteImage(category.image);
+    }
+
     await category.deleteOne();
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
