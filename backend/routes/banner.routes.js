@@ -11,6 +11,7 @@ import { upload } from '../utils/imageUpload.js';
 const router = express.Router();
 
 // Public
+// Public
 router.get('/', getBanners);
 
 // Protected (admin)
