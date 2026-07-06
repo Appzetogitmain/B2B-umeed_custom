@@ -264,7 +264,7 @@ function Wallet() {
                     title: 'Umeed B2B Retailer Network',
                     text: shareText,
                     url: `https://umeed.com/retailer/signup?ref=${displayId}`
-                  }).catch(() => {})
+                  }).catch(() => { })
                 }
               }}
               className="w-full mb-5 h-14 bg-black text-white rounded-2xl font-black text-xs uppercase tracking-[0.15em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-lg shadow-black/10"

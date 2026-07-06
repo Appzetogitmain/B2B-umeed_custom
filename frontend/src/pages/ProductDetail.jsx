@@ -144,9 +144,8 @@ function ProductDetail() {
         )}
 
         <div className="flex items-center gap-2 mt-4">
-          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${
-            product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-          }`}>
+          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+            }`}>
             {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
           </span>
         </div>
@@ -176,13 +175,12 @@ function ProductDetail() {
         <button
           onClick={handleAddToCart}
           disabled={product.stock <= 0}
-          className={`w-full h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl ${
-            added
-              ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-              : product.stock > 0
-                ? 'bg-black text-white shadow-black/10'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-          }`}
+          className={`w-full h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl ${added
+            ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+            : product.stock > 0
+              ? 'bg-black text-white shadow-black/10'
+              : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+            }`}
         >
           {added ? (
             <>

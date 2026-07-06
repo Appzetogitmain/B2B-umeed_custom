@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import urLogo from '../../assets/ur.png'
 
 function DeliveryLogin() {
   const navigate = useNavigate()
@@ -68,8 +69,10 @@ function DeliveryLogin() {
     <div className="flex min-h-dvh items-center justify-center bg-[#F8FAFC] px-4 py-8">
       <div className="w-full max-w-md">
         <section className="bg-black rounded-[28px] px-6 pb-12 pt-10 text-white shadow-xl">
+          <div className="mb-6 inline-flex bg-white rounded-full h-24 w-24 items-center justify-center overflow-hidden">
+            <img src={urLogo} alt="Umeed Logo" className="h-full w-full object-contain mix-blend-multiply scale-110" />
+          </div>
           <p className="text-xs uppercase tracking-[0.22em] text-gray-400 font-semibold">Delivery Portal</p>
-          <h1 className="mt-2 text-[30px] font-bold leading-tight tracking-[-0.01em]">Umeed Delivery</h1>
           <p className="mt-2 max-w-[30ch] text-sm leading-relaxed text-gray-400">
             Login to manage assigned orders, delivery status, and your daily earnings.
           </p>

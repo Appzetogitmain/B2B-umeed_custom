@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, ArrowRight, ShieldCheck, ArrowLeft, Mail, Eye, EyeOff } from 'lucide-react'
+import urLogo from '../../assets/ur.png'
 
 function Login() {
   const [loginType, setLoginType] = useState('owner') // 'owner' or 'partner'
@@ -29,7 +30,7 @@ function Login() {
     setForgotSubmitting(true)
 
     try {
-      const response = await fetch('http://localhost:5200/api/v1/auth/retailer/forgot-password', {
+      const response = await fetch('https://umeedretailers.com/api/v1/auth/retailer/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail.trim() })
@@ -149,14 +150,13 @@ function Login() {
       {/* HEADER HERO */}
       <section className="bg-[#0F172A] rounded-b-[40px] px-6 pb-16 pt-12 text-white relative overflow-hidden shadow-2xl">
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-4">
-             <div className="h-10 w-10 bg-white/10 rounded-xl grid place-items-center backdrop-blur-md border border-white/10">
-               <LogIn size={20} />
-             </div>
+          <div className="mb-6 inline-flex bg-white rounded-full h-24 w-24 items-center justify-center overflow-hidden shadow-md">
+            <img src={urLogo} alt="Umeed Logo" className="h-full w-full object-contain mix-blend-multiply scale-110" />
+          </div>
+          <div className="flex items-center gap-2 mb-2">
              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Retailer Portal</span>
           </div>
-          <h1 className="text-4xl font-black leading-tight tracking-tighter">Umeed Retailers</h1>
-          <p className="mt-4 max-w-[28ch] text-sm font-medium text-slate-400 leading-relaxed">
+          <p className="mt-2 max-w-[28ch] text-sm font-medium text-slate-400 leading-relaxed">
             Wholesale ordering platform for local stores and supermarkets.
           </p>
         </div>

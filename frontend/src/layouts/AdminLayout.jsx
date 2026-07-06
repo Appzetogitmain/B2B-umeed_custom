@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { adminSidebarSections } from '../data/adminModules'
+import urLogo from '../assets/ur.png'
 
 // Icon mapping for sidebar items
 function IconComponent({ name, isActive }) {
@@ -151,12 +152,10 @@ function SidebarItem({ path, label, iconName, collapsed, onNavigate }) {
       to={`/admin/${path}`}
       onClick={onNavigate}
       className={({ isActive }) =>
-        `flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out ${
-          collapsed ? 'justify-center gap-0' : 'gap-3'
-        } ${
-          isActive
-            ? 'bg-black text-white'
-            : 'text-gray-600 hover:bg-gray-100'
+        `flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out ${collapsed ? 'justify-center gap-0' : 'gap-3'
+        } ${isActive
+          ? 'bg-black text-white'
+          : 'text-gray-600 hover:bg-gray-100'
         }`
       }
       title={collapsed ? label : undefined}
@@ -219,20 +218,12 @@ function AdminLayout() {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* FIXED SIDEBAR - SCROLLABLE */}
       <aside
-        className={`fixed left-0 top-0 h-screen border-r border-gray-200 bg-white overflow-y-auto flex flex-col transform-gpu transition-all duration-300 ease-in-out ${
-          collapsed ? 'w-[72px]' : 'w-[240px]'
-        }`}
+        className={`fixed left-0 top-0 h-screen border-r border-gray-200 bg-white overflow-y-auto flex flex-col transform-gpu transition-all duration-300 ease-in-out ${collapsed ? 'w-[72px]' : 'w-[240px]'
+          }`}
       >
         {/* Sidebar Header - Sticky */}
-        <div className={`border-b border-gray-200 sticky top-0 bg-white transition-all duration-300 ease-in-out ${collapsed ? 'px-2 py-5' : 'px-6 py-5'}`}>
-          {!collapsed ? (
-            <>
-              <p className="text-lg font-semibold text-gray-700">Umeed</p>
-              <p className="text-xs text-gray-500 mt-0.5">Admin Panel</p>
-            </>
-          ) : (
-            <p className="text-center text-sm font-semibold text-gray-700">U</p>
-          )}
+        <div className={`border-b border-gray-200 sticky top-0 bg-white transition-all duration-300 ease-in-out flex flex-col items-center justify-center ${collapsed ? 'px-2 py-5' : 'px-6 py-5'}`}>
+          <img src={urLogo} alt="Umeed Logo" className={`object-contain ${collapsed ? 'h-12' : 'h-20'}`} />
         </div>
 
         {/* Sidebar Menu - Scrollable */}
@@ -251,7 +242,7 @@ function AdminLayout() {
                       label={item.label}
                       iconName={item.icon}
                       collapsed={collapsed}
-                      onNavigate={() => {}}
+                      onNavigate={() => { }}
                     />
                   ))}
                 </div>
@@ -265,9 +256,8 @@ function AdminLayout() {
           <button
             type="button"
             onClick={handleLogout}
-            className={`flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-all duration-300 ease-in-out hover:bg-gray-100 border border-gray-200 ${
-              collapsed ? 'justify-center gap-0' : 'gap-3'
-            }`}
+            className={`flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition-all duration-300 ease-in-out hover:bg-gray-100 border border-gray-200 ${collapsed ? 'justify-center gap-0' : 'gap-3'
+              }`}
             title={collapsed ? 'Logout' : undefined}
           >
             <IconComponent name="logout" isActive={false} />
@@ -278,9 +268,8 @@ function AdminLayout() {
 
       {/* MAIN CONTENT */}
       <div
-        className={`flex h-screen min-h-0 flex-col flex-1 overflow-hidden transition-[margin-left] duration-300 ease-in-out ${
-          collapsed ? 'ml-[72px]' : 'ml-[240px]'
-        }`}
+        className={`flex h-screen min-h-0 flex-col flex-1 overflow-hidden transition-[margin-left] duration-300 ease-in-out ${collapsed ? 'ml-[72px]' : 'ml-[240px]'
+          }`}
       >
         {isProfileMenuOpen ? (
           <button
@@ -293,9 +282,8 @@ function AdminLayout() {
 
         {/* FIXED HEADER */}
         <header
-          className={`fixed top-0 right-0 z-[100] h-14 border-b border-gray-200 bg-white px-4 shadow-sm transition-[left] duration-300 ease-in-out ${
-            collapsed ? 'left-[72px]' : 'left-[240px]'
-          }`}
+          className={`fixed top-0 right-0 z-[100] h-14 border-b border-gray-200 bg-white px-4 shadow-sm transition-[left] duration-300 ease-in-out ${collapsed ? 'left-[72px]' : 'left-[240px]'
+            }`}
         >
           <div className="flex h-full items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -313,7 +301,7 @@ function AdminLayout() {
               </button>
 
               <div className="min-w-0">
-              <h1 className="text-base font-semibold text-gray-700">{pageTitle}</h1>
+                <h1 className="text-base font-semibold text-gray-700">{pageTitle}</h1>
               </div>
             </div>
 

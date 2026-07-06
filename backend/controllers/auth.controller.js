@@ -543,7 +543,7 @@ export const forgotPasswordRetailer = async (req, res) => {
       },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://umeedretailers.com';
     const resetUrl = `${frontendUrl}/retailer/reset-password/${resetToken}`;
 
     // Branded Professional Email Template

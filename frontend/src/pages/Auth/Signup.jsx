@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import urLogo from '../../assets/ur.png'
 
 function Signup() {
   const [form, setForm] = useState({
@@ -109,8 +110,10 @@ function Signup() {
         >
           <ArrowLeft size={18} />
         </button>
+        <div className="mb-6 inline-flex bg-white rounded-full h-24 w-24 items-center justify-center overflow-hidden shadow-md">
+          <img src={urLogo} alt="Umeed Logo" className="h-full w-full object-contain mix-blend-multiply scale-110" />
+        </div>
         <p className="text-xs uppercase tracking-[0.22em] text-[#d6f5ea]">Get Started</p>
-        <h1 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-0.01em]">Umeed Retailers</h1>
         <p className="mt-2 max-w-[24ch] text-sm leading-relaxed text-[#d6f5ea]">
           Create your retailer account and start ordering from the wholesale catalog.
         </p>

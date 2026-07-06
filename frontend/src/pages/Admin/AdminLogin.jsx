@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import urLogo from '../../assets/ur.png'
 
 function AdminLogin() {
   const navigate = useNavigate()
@@ -51,13 +52,10 @@ function AdminLogin() {
     <div className="flex min-h-dvh items-center justify-center bg-[#f5f5f5] p-4">
       <div className="w-full max-w-[380px] rounded-[14px] border border-[#e5e5e5] bg-white p-7 shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
         <div className="text-center">
-          <div className="mx-auto grid h-11 w-11 place-items-center rounded-full border border-[#d1d5db] bg-white text-black">
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden="true">
-              <circle cx="12" cy="8" r="3" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M5 19a7 7 0 0 1 14 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
+          <div className="mx-auto flex justify-center mt-0 -mb-8">
+            <img src={urLogo} alt="Umeed Logo" className="h-28 w-auto object-contain mix-blend-multiply" />
           </div>
-          <h2 className="mt-3 text-2xl font-semibold text-black">Umeed</h2>
+          <h2 className="mt-1 text-xl font-semibold text-black hidden">Umeed</h2>
           <p className="mt-1 text-sm text-gray-500">Admin Panel Access</p>
         </div>
 
