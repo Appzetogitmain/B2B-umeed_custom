@@ -25,10 +25,13 @@ import DeliveryHome from '../pages/Delivery/DeliveryHome'
 import DeliveryOrders from '../pages/Delivery/DeliveryOrders'
 import DeliveryEarnings from '../pages/Delivery/DeliveryEarnings'
 import DeliveryPerformance from '../pages/Delivery/DeliveryPerformance'
+import NotificationListener from '../components/NotificationListener'
 
 function AppRoutes() {
   return (
-    <Routes>
+    <>
+      <NotificationListener />
+      <Routes>
       <Route path="/" element={<SmartRedirect />} />
       <Route path="/admin/auth" element={<AdminAuthRoute />} />
 
@@ -92,7 +95,8 @@ function AppRoutes() {
       </Route>
 
       <Route path="*" element={<Navigate to="/retailer/auth" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }
 

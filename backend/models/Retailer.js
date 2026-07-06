@@ -121,7 +121,15 @@ const retailerSchema = new mongoose.Schema({
   addressState: { type: String, default: '' },
   photo: { type: String, default: '' },
   resetPasswordToken: { type: String, default: '' },
-  resetPasswordExpires: { type: Date }
+  resetPasswordExpires: { type: Date },
+  fcmToken: {
+    type: String,
+    default: null
+  },
+  fcmTokenMobile: {
+    type: String,
+    default: null
+  }
 }, {
   timestamps: true,
 });

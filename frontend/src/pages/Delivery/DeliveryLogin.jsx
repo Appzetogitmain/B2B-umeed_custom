@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
+import { getBackendUrl } from '../../utils/api'
 import urLogo from '../../assets/ur.png'
+import { requestNotificationPermission } from '../../utils/firebase'
 
 function DeliveryLogin() {
   const navigate = useNavigate()
@@ -53,6 +55,7 @@ function DeliveryLogin() {
 
       localStorage.setItem('umeed-delivery-auth', 'true')
       localStorage.setItem('umeed-delivery-partner', JSON.stringify(data))
+      requestNotificationPermission('partner', data.token)
       navigate('/delivery/home', { replace: true })
     } catch (err) {
       setError(err.message)

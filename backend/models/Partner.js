@@ -44,6 +44,14 @@ const partnerSchema = new mongoose.Schema({
   earnings: {
     type: String,
     default: 'Rs 0',
+  },
+  fcmToken: {
+    type: String,
+    default: null
+  },
+  fcmTokenMobile: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

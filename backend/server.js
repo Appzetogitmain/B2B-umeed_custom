@@ -18,6 +18,7 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import walletRoutes from './routes/wallet.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import targetRoutes from './routes/target.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 
 
 // Load env vars
@@ -107,6 +108,7 @@ app.use('/api/v1/wallets', walletRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/targets', targetRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 const PORT = process.env.PORT || 5200;
 

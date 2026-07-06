@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import urLogo from '../../assets/ur.png'
+import { requestNotificationPermission } from '../../utils/firebase'
 
 function Signup() {
   const [form, setForm] = useState({
@@ -47,7 +48,13 @@ function Signup() {
   const [error, setError] = useState('')
 
   const handleChange = (event) => {
-    const { name, value } = event.target
+    let { name, value } = event.target
+    
+    // Restrict phone fields to numbers only, max 10 digits
+    if (name === 'phone' || name === 'whatsappNo' || name === 'alternateContactPhone') {
+      value = value.replace(/\D/g, '').substring(0, 10);
+    }
+    
     setForm((prev) => ({ ...prev, [name]: value }))
     if (error) setError('')
   }
@@ -93,6 +100,7 @@ function Signup() {
       // Save retailer data dynamically for profile
       localStorage.setItem('umeed-retailer', JSON.stringify(data))
       
+      requestNotificationPermission('retailer', data.token)
       navigate('/retailer/home')
     } catch (err) {
       setSubmitting(false)
@@ -332,7 +340,8 @@ function Signup() {
               type="text"
               placeholder="Official mobile number"
               value={form.phone}
-              onChange={(e) => setForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+              onChange={handleChange}
+              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0,10) }}
               maxLength={10}
               className="input-field"
               required
@@ -366,7 +375,8 @@ function Signup() {
               type="text"
               placeholder="WhatsApp mobile number"
               value={form.whatsappNo}
-              onChange={(e) => setForm(prev => ({ ...prev, whatsappNo: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+              onChange={handleChange}
+              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0,10) }}
               maxLength={10}
               className="input-field"
             />
@@ -397,7 +407,8 @@ function Signup() {
               type="text"
               placeholder="Alternate mobile number"
               value={form.alternateContactPhone}
-              onChange={(e) => setForm(prev => ({ ...prev, alternateContactPhone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+              onChange={handleChange}
+              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0,10) }}
               maxLength={10}
               className="input-field"
             />

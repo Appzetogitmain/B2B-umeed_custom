@@ -33,7 +33,7 @@ export const registerRetailer = async (req, res) => {
 
     // Upload photo if provided
     let photoUrl = '';
-    
+
     // Support Base64 image
     if (photo && photo.startsWith('data:image')) {
       try {
@@ -324,7 +324,7 @@ export const createAdminRetailer = async (req, res) => {
 
     // Upload photo if provided
     let photoUrl = '';
-    
+
     if (photo && photo.startsWith('data:image')) {
       try {
         const base64Data = photo.replace(/^data:image\/\w+;base64,/, "");

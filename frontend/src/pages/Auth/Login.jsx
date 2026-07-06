@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogIn, ArrowRight, ShieldCheck, ArrowLeft, Mail, Eye, EyeOff } from 'lucide-react'
 import urLogo from '../../assets/ur.png'
+import { requestNotificationPermission } from '../../utils/firebase'
 
 function Login() {
   const [loginType, setLoginType] = useState('owner') // 'owner' or 'partner'
@@ -99,6 +100,7 @@ function Login() {
 
         setSubmitting(false)
         localStorage.setItem('umeed-retailer', JSON.stringify(data))
+        requestNotificationPermission('retailer', data.token)
         navigate('/retailer/home')
       } catch (err) {
         setSubmitting(false)
@@ -137,6 +139,7 @@ function Login() {
 
         setSubmitting(false)
         localStorage.setItem('umeed-retailer', JSON.stringify(data))
+        requestNotificationPermission('retailer', data.token)
         navigate('/retailer/home')
       } catch (err) {
         setSubmitting(false)
