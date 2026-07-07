@@ -222,12 +222,12 @@ function AdminLayout() {
           }`}
       >
         {/* Sidebar Header - Sticky */}
-        <div className={`border-b border-gray-200 sticky top-0 bg-white transition-all duration-300 ease-in-out flex flex-col items-center justify-center ${collapsed ? 'px-2 py-5' : 'px-6 py-5'}`}>
-          <img src={urLogo} alt="Umeed Logo" className={`object-contain ${collapsed ? 'h-12' : 'h-20'}`} />
+        <div className={`border-b border-gray-200 sticky top-0 bg-white z-10 transition-all duration-300 ease-in-out flex flex-col items-center justify-center ${collapsed ? 'px-2 py-3' : 'px-6 py-3'}`}>
+          <img src={urLogo} alt="Umeed Logo" className={`object-contain ${collapsed ? 'h-10' : 'h-14'}`} />
         </div>
 
         {/* Sidebar Menu - Scrollable */}
-        <nav className={`flex-1 overflow-y-auto py-5 transition-all duration-300 ease-in-out ${collapsed ? 'px-2' : 'px-4'}`}>
+        <nav className={`flex-1 overflow-y-auto py-3 transition-all duration-300 ease-in-out ${collapsed ? 'px-2' : 'px-4'}`}>
           <div className="space-y-6">
             {adminSidebarSections.map((section) => (
               <div key={section.title} className="space-y-2">
