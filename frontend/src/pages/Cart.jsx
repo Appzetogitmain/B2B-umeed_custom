@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Package, CreditCard, Banknote, X, CheckCircle } from 'lucide-react'
 import useCart from '../hooks/useCart'
 import { useState } from 'react'

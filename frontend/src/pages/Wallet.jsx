@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { CreditCard, Wallet as WalletIcon, Gift, ArrowUpRight, ArrowDownLeft, Share2, Users, ShieldCheck, X, Copy, MessageSquare } from 'lucide-react'
 

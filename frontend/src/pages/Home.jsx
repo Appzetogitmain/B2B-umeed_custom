@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import {
   Search as SearchIcon,

@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Package, ShoppingCart, Plus, Minus, Check } from 'lucide-react'

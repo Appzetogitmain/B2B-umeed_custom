@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, TrendingUp, TrendingDown, Wallet, Gift, CreditCard, Users, ArrowDownLeft, ArrowUpRight, BarChart3, PieChart } from 'lucide-react'
