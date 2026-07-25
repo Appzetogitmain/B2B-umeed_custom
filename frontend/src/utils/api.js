@@ -1,9 +1,8 @@
 const getBackendUrl = () => {
-  // Use Vite env variable if available, stripping the /api/v1 part to get base URL
-  if (import.meta.env && import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-  }
-  return `${getBackendUrl()}`;
+  const hostname = window.location.hostname;
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:5200';
+  if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) return `http://${hostname}:5200`;
+  return 'http://localhost:5200';
 }
 
 // Get the auth token from localStorage based on which app is active
@@ -53,7 +52,7 @@ window.fetch = function(url, options = {}) {
   // Only inject token for our backend API calls (match both dynamic URL and hardcoded localhost)
   const isBackendCall = typeof url === 'string' && (
     url.startsWith(backendUrl) ||
-    url.startsWith(`${getBackendUrl()}`) ||
+    url.startsWith('http://localhost:5200') ||
     url.includes(':5200/api/')
   )
 

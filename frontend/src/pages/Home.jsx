@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import {
   Search as SearchIcon,
@@ -53,45 +54,6 @@ const categories = [
   { name: 'Electronics & Appliances', icon: <Zap size={22} /> },
 ]
 
-const products = [
-  {
-    id: '1',
-    category: 'Grocery',
-    name: 'Sharbati Atta 10kg',
-    price: 540,
-    originalPrice: 600,
-    discount: '10% OFF',
-    image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=300'
-  },
-  {
-    id: '2',
-    category: 'Grocery',
-    name: 'Basmati Rice 25kg',
-    price: 2340,
-    originalPrice: 2600,
-    discount: 'SAVE ₹260',
-    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=300'
-  },
-  {
-    id: '3',
-    category: 'Oil & Ghee',
-    name: 'Sunflower Oil 1L',
-    price: 168,
-    originalPrice: 190,
-    discount: 'BEST',
-    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=300'
-  },
-  {
-    id: '4',
-    category: 'Oil & Ghee',
-    name: 'Refined Oil 5L',
-    price: 810,
-    originalPrice: 900,
-    discount: 'BULK',
-    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=300'
-  },
-]
-
 function Home() {
   const { addToCart, totalItems } = useCart()
   const [addedId, setAddedId] = useState(null)
@@ -115,19 +77,6 @@ function Home() {
   // Get logged-in retailer name from localStorage
   const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}')
   const retailerName = retailerData?.name || 'Umeed Retailer'
-
-  const getBackendUrl = () => {
-    const hostname = window.location.hostname;
-    // Safe fallback for localhost / 127.0.0.1 / file URIs
-    if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `${getBackendUrl()}`;
-    }
-    // Dynamic IP handling (like 192.168.x.x) for physical device / emulator testing
-    if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) {
-      return `http://${hostname}:5200`;
-    }
-    return `${getBackendUrl()}`;
-  }
 
   useEffect(() => {
     const fetchCats = async () => {
@@ -291,51 +240,6 @@ function Home() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  const products = [
-    // Grocery | Kitchen
-    { id: '1', category: 'Grocery | Kitchen', name: 'Sharbati Atta 10kg', price: 540, originalPrice: 600, discount: '10% OFF', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=300' },
-    { id: '2', category: 'Grocery | Kitchen', name: 'Basmati Rice 25kg', price: 2340, originalPrice: 2600, discount: 'SAVE ₹260', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=300' },
-    { id: '3', category: 'Grocery | Kitchen', name: 'Non-Stick Pan 24cm', price: 899, originalPrice: 1200, discount: '25% OFF', image: 'https://images.unsplash.com/photo-1584990344468-58fc9460c4a1?auto=format&fit=crop&q=80&w=300' },
-
-    // Masala | Oil | Ghee
-    { id: '4', category: 'Masala | Oil | Ghee', name: 'Sunflower Oil 5L', price: 810, originalPrice: 900, discount: '10% OFF', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=300' },
-    { id: '5', category: 'Masala | Oil | Ghee', name: 'Pure Cow Ghee 1L', price: 650, originalPrice: 720, discount: 'SAVE ₹70', image: 'https://images.unsplash.com/photo-1589927986089-35812388d1f4?auto=format&fit=crop&q=80&w=300' },
-    { id: '6', category: 'Masala | Oil | Ghee', name: 'Turmeric Powder 500g', price: 120, originalPrice: 150, discount: '20% OFF', image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=300' },
-
-    // Drinks | Noodles | Snacks
-    { id: '7', category: 'Drinks | Noodles | Snacks', name: 'Instant Noodles Pack', price: 120, originalPrice: 140, discount: '15% OFF', image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&q=80&w=300' },
-    { id: '8', category: 'Drinks | Noodles | Snacks', name: 'Cola 2L Bottle', price: 95, originalPrice: 110, discount: 'SAVE ₹15', image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80&w=300' },
-    { id: '9', category: 'Drinks | Noodles | Snacks', name: 'Potato Chips 150g', price: 50, originalPrice: 60, discount: '15% OFF', image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?auto=format&fit=crop&q=80&w=300' },
-
-    // Home Cleaning & Decore
-    { id: '10', category: 'Home Cleaning & Decore', name: 'Floor Cleaner 1L', price: 180, originalPrice: 220, discount: '18% OFF', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=300' },
-    { id: '11', category: 'Home Cleaning & Decore', name: 'Lobby Vase Modern', price: 450, originalPrice: 600, discount: '25% OFF', image: 'https://images.unsplash.com/photo-1581783898377-1c85bf937427?auto=format&fit=crop&q=80&w=300' },
-
-    // Laundry - Soft Touch
-    { id: '12', category: 'Laundry - Soft Touch', name: 'Detergent Gel 2L', price: 420, originalPrice: 480, discount: '12% OFF', image: 'https://images.unsplash.com/photo-1610557870699-14a571da2cca?auto=format&fit=crop&q=80&w=300' },
-    { id: '13', category: 'Laundry - Soft Touch', name: 'Fabric Conditioner', price: 210, originalPrice: 250, discount: '16% OFF', image: 'https://images.unsplash.com/photo-1582733075958-a037a67df4af?auto=format&fit=crop&q=80&w=300' },
-
-    // Personal Care
-    { id: '14', category: 'Personal Care', name: 'Face Wash 150ml', price: 299, originalPrice: 350, discount: '15% OFF', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&q=80&w=300' },
-    { id: '15', category: 'Personal Care', name: 'Moisturizer Box', price: 450, originalPrice: 550, discount: '18% OFF', image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&q=80&w=300' },
-
-    // Personal Hygiene
-    { id: '16', category: 'Personal Hygiene', name: 'Hand Sanitizer 500ml', price: 150, originalPrice: 200, discount: '25% OFF', image: 'https://images.unsplash.com/photo-1584305323448-899459b71ee7?auto=format&fit=crop&q=80&w=300' },
-    { id: '17', category: 'Personal Hygiene', name: 'Hygiene Soap Pack', price: 180, originalPrice: 220, discount: '18% OFF', image: 'https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&q=80&w=300' },
-
-    // Puja Essential
-    { id: '18', category: 'Puja Essential', name: 'Incense Sticks Box', price: 85, originalPrice: 100, discount: '15% OFF', image: 'https://images.unsplash.com/photo-1602881917760-7379db593981?auto=format&fit=crop&q=80&w=300' },
-    { id: '19', category: 'Puja Essential', name: 'Premium Puja Oil', price: 240, originalPrice: 280, discount: 'SAVE ₹40', image: 'https://images.unsplash.com/photo-1609139003551-ee40f5f73ec0?auto=format&fit=crop&q=80&w=300' },
-
-    // School Accessories
-    { id: '20', category: 'School Accessories', name: 'Notebooks Set (6)', price: 350, originalPrice: 420, discount: '16% OFF', image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&q=80&w=300' },
-    { id: '21', category: 'School Accessories', name: 'Ergonomic Backpack', price: 1250, originalPrice: 1800, discount: '30% OFF', image: 'https://images.unsplash.com/photo-1553062407-98eeb94c6a62?auto=format&fit=crop&q=80&w=300' },
-
-    // Electronics & Appliances
-    { id: '22', category: 'Electronics & Appliances', name: 'Electric Kettle 1.5L', price: 1150, originalPrice: 1500, discount: '23% OFF', image: 'https://images.unsplash.com/photo-1594212699903-ec8a3ecc50f1?auto=format&fit=crop&q=80&w=300' },
-    { id: '23', category: 'Electronics & Appliances', name: 'Power Bank 20000mAh', price: 1499, originalPrice: 2000, discount: '25% OFF', image: 'https://images.unsplash.com/photo-1609091839311-d5364f512c58?auto=format&fit=crop&q=80&w=300' },
-  ]
-
   const displayedCategories = dynamicCategories.length > 0
     ? dynamicCategories.map(cat => ({
       name: cat.categoryName,
@@ -348,7 +252,7 @@ function Home() {
       isDynamic: false
     }))
 
-  const activeProducts = dynamicProducts.length > 0 ? dynamicProducts : products;
+  const activeProducts = dynamicProducts;
 
   const filteredProducts = searchResults !== null
     ? searchResults

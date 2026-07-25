@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../../utils/api';
 import { useState, useEffect } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { adminModuleContent } from '../../data/adminModules'

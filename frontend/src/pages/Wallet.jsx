@@ -1,12 +1,8 @@
+import { getBackendUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { CreditCard, Wallet as WalletIcon, Gift, ArrowUpRight, ArrowDownLeft, Share2, Users, ShieldCheck, X, Copy, MessageSquare } from 'lucide-react'
 
-const getBackendUrl = () => {
-  const hostname = window.location.hostname;
-  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') return `${getBackendUrl()}`;
-  if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) return `http://${hostname}:5200`;
-  return `${getBackendUrl()}`;
-}
+
 
 function Wallet() {
   const [walletData, setWalletData] = useState(null)

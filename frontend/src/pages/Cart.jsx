@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../utils/api';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Package, CreditCard, Banknote, X, CheckCircle } from 'lucide-react'
 import useCart from '../hooks/useCart'
 import { useState } from 'react'
@@ -7,12 +8,7 @@ function formatCurrency(value) {
   return `₹${value.toLocaleString('en-IN')}`
 }
 
-const getBackendUrl = () => {
-  const hostname = window.location.hostname;
-  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') return `${getBackendUrl()}`;
-  if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) return `http://${hostname}:5200`;
-  return `${getBackendUrl()}`;
-}
+
 
 function Cart() {
   const { cartItems, totalPrice, increaseQuantity, decreaseQuantity, removeItem, clearCart } = useCart()
