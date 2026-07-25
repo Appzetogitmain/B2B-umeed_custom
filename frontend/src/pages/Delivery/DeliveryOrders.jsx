@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 
 const getBackendUrl = () => {
   const hostname = window.location.hostname;
-  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') return 'http://localhost:5200';
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') return `${getBackendUrl()}`;
   if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) return `http://${hostname}:5200`;
-  return 'http://localhost:5200';
+  return `${getBackendUrl()}`;
 }
 
 function getStatusBadge(status) {

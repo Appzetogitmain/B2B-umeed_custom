@@ -171,7 +171,7 @@ function SidebarItem({ path, label, iconName, collapsed, onNavigate }) {
 }
 
 function AdminLayout() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(window.innerWidth < 768)
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -218,8 +218,9 @@ function AdminLayout() {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* FIXED SIDEBAR - SCROLLABLE */}
       <aside
-        className={`fixed left-0 top-0 h-screen border-r border-gray-200 bg-white overflow-y-auto flex flex-col transform-gpu transition-all duration-300 ease-in-out ${collapsed ? 'w-[72px]' : 'w-[240px]'
-          }`}
+        className={`fixed left-0 top-0 z-[101] h-screen border-r border-gray-200 bg-white overflow-y-auto flex flex-col transform-gpu transition-all duration-300 ease-in-out ${
+          collapsed ? '-translate-x-full md:translate-x-0 md:w-[72px]' : 'translate-x-0 w-[240px] md:w-[240px]'
+        }`}
       >
         {/* Sidebar Header - Sticky */}
         <div className={`border-b border-gray-200 sticky top-0 bg-white z-10 transition-all duration-300 ease-in-out flex flex-col items-center justify-center ${collapsed ? 'px-2 py-3' : 'px-6 py-3'}`}>
@@ -266,10 +267,19 @@ function AdminLayout() {
         </div>
       </aside>
 
+      {/* MOBILE OVERLAY */}
+      {!collapsed && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/20 md:hidden" 
+          onClick={() => setCollapsed(true)} 
+        />
+      )}
+
       {/* MAIN CONTENT */}
       <div
-        className={`flex h-screen min-h-0 flex-col flex-1 overflow-hidden transition-[margin-left] duration-300 ease-in-out ${collapsed ? 'ml-[72px]' : 'ml-[240px]'
-          }`}
+        className={`flex h-screen min-h-0 flex-col flex-1 overflow-hidden transition-[margin-left] duration-300 ease-in-out ${
+          collapsed ? 'ml-0 md:ml-[72px]' : 'ml-0 md:ml-[240px]'
+        }`}
       >
         {isProfileMenuOpen ? (
           <button
@@ -282,8 +292,9 @@ function AdminLayout() {
 
         {/* FIXED HEADER */}
         <header
-          className={`fixed top-0 right-0 z-[100] h-14 border-b border-gray-200 bg-white px-4 shadow-sm transition-[left] duration-300 ease-in-out ${collapsed ? 'left-[72px]' : 'left-[240px]'
-            }`}
+          className={`fixed top-0 right-0 z-[100] h-14 border-b border-gray-200 bg-white px-4 shadow-sm transition-[left] duration-300 ease-in-out ${
+            collapsed ? 'left-0 md:left-[72px]' : 'left-0 md:left-[240px]'
+          }`}
         >
           <div className="flex h-full items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -384,7 +395,7 @@ function AdminLayout() {
         </header>
 
         {/* SCROLLABLE CONTENT */}
-        <main className="flex-1 min-h-0 overflow-y-auto px-8 pb-6 pt-[80px]">
+        <main className="flex-1 min-h-0 overflow-y-auto px-4 md:px-8 pb-6 pt-[80px]">
           <Outlet />
         </main>
       </div>

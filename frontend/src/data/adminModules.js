@@ -16,6 +16,7 @@ export const adminSidebarSections = [
       { label: 'Commission', path: 'commission', icon: 'commission' },
       { label: 'Cashback & Voucher', path: 'cashback-voucher', icon: 'cashback' },
       { label: 'Wallet System', path: 'wallet-system', icon: 'wallet' },
+      { label: 'Deal Management', path: 'deal-management', icon: 'retailers' },
       { label: 'Payments & Reports', path: 'payments-reports', icon: 'payments' },
     ],
   },
@@ -125,6 +126,15 @@ export const adminModuleContent = {
       'Approve or reject pending retailer orders with reason logs',
       'Order status pipeline from packed to delivered',
       'Escalation queue for delayed and high-value orders',
+    ],
+  },
+  'deal-management': {
+    title: 'Deal Management',
+    subtitle: 'Manage custom rate and bulk quantity deals requested by retailers.',
+    points: [
+      'Review requested deals and expected prices from retailers',
+      'Accept deals or send a counter offer',
+      'Track deal status (Pending, Countered, Accepted, Rejected)',
     ],
   },
   inventory: {

@@ -25,7 +25,7 @@ function AdminLogin() {
 
     try {
       setIsLoading(true)
-      const response = await fetch('http://localhost:5200/api/v1/auth/admin/login', {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials)

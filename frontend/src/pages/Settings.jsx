@@ -44,7 +44,7 @@ function Settings() {
     setSubmitting(true)
 
     try {
-      const response = await fetch('http://localhost:5200/api/v1/auth/retailer/update', {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/retailer/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(retailer)

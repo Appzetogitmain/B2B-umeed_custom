@@ -17,7 +17,9 @@ import {
   Zap,
   Droplets,
   UtensilsCrossed,
-  Soup
+  Soup,
+  Handshake,
+  X
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import useCart from '../hooks/useCart'
@@ -101,6 +103,14 @@ function Home() {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState(null)
+  
+  // Deal Modal state
+  const [dealModalOpen, setDealModalOpen] = useState(false)
+  const [dealProduct, setDealProduct] = useState(null)
+  const [dealQuantity, setDealQuantity] = useState(10)
+  const [dealPrice, setDealPrice] = useState(0)
+  const [dealMessage, setDealMessage] = useState('')
+  const [isSubmittingDeal, setIsSubmittingDeal] = useState(false)
 
   // Get logged-in retailer name from localStorage
   const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}')
@@ -110,13 +120,13 @@ function Home() {
     const hostname = window.location.hostname;
     // Safe fallback for localhost / 127.0.0.1 / file URIs
     if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:5200';
+      return `${getBackendUrl()}`;
     }
     // Dynamic IP handling (like 192.168.x.x) for physical device / emulator testing
     if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(hostname)) {
       return `http://${hostname}:5200`;
     }
-    return 'http://localhost:5200';
+    return `${getBackendUrl()}`;
   }
 
   useEffect(() => {
@@ -174,6 +184,8 @@ function Home() {
               id: p._id,
               category: p.category,
               name: p.name,
+              variantName: p.variantName,
+              description: p.description,
               price: p.price,
               originalPrice: p.mrp,
               discount: p.discount ? `${p.discount}% OFF` : '',
@@ -224,6 +236,8 @@ function Home() {
             id: p._id,
             category: p.category,
             name: p.name,
+            variantName: p.variantName,
+            description: p.description,
             price: p.price,
             originalPrice: p.mrp,
             discount: p.discount ? `${p.discount}% OFF` : '',
@@ -250,6 +264,8 @@ function Home() {
                   id: p._id,
                   category: p.category,
                   name: p.name,
+                  variantName: p.variantName,
+                  description: p.description,
                   price: p.price,
                   originalPrice: p.mrp,
                   discount: p.discount ? `${p.discount}% OFF` : '',
@@ -358,6 +374,51 @@ function Home() {
     addToCart(product)
     setAddedId(product.id)
     setTimeout(() => setAddedId(null), 1000)
+  }
+
+  const openDealModal = (product) => {
+    setDealProduct(product)
+    setDealQuantity(10) // default bulk qty
+    setDealPrice(product.price)
+    setDealMessage('')
+    setDealModalOpen(true)
+  }
+
+  const submitDealRequest = async () => {
+    if (!dealProduct || dealQuantity < 1 || dealPrice <= 0) return
+    setIsSubmittingDeal(true)
+    
+    try {
+      const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}')
+      const token = retailerData.token
+      
+      const res = await fetch(`${getBackendUrl()}/api/v1/deals/request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: dealProduct.id,
+          requestedQuantity: dealQuantity,
+          requestedRate: dealPrice,
+          retailerMessage: dealMessage
+        })
+      })
+      
+      if (res.ok) {
+        alert('Deal request sent successfully! You can track it in My Deals.')
+        setDealModalOpen(false)
+      } else {
+        const error = await res.json()
+        alert(`Failed to send request: ${error.message}`)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error sending deal request')
+    } finally {
+      setIsSubmittingDeal(false)
+    }
   }
 
   return (
@@ -495,30 +556,42 @@ function Home() {
             {selectedCategory === 'All' ? 'Popular Items' : selectedCategory}
           </h3>
         </div>
-        <div className="grid grid-cols-2 gap-3 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-4">
           {isLoadingProducts ? (
-            <div className="col-span-2 py-10 text-center">
+            <div className="col-span-full py-10 text-center">
               <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
                 <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
               </div>
             </div>
           ) : filteredProducts.length > 0 ? filteredProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-xl p-2 shadow-sm border border-slate-50 flex flex-col hover:shadow-md transition-all duration-200 group">
-              <div className="relative h-28 w-full bg-slate-50 rounded-lg overflow-hidden mb-2">
+            <div key={product.id} className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-all duration-200 group">
+              <div className="relative h-32 sm:h-40 md:h-48 w-full bg-slate-50 rounded-lg overflow-hidden mb-3">
                 <img 
                   src={product.image} 
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
-                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-white text-[7px] font-black uppercase tracking-tighter">
+                <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-white text-[9px] font-black uppercase tracking-tighter">
                   {product.discount}
                 </div>
               </div>
 
               <div className="flex flex-col flex-1 px-1">
-                <h4 className="text-[10px] font-bold text-[#0F172A] mb-1 line-clamp-2 leading-tight h-6">
+                <h4 className="text-xs font-bold text-[#0F172A] mb-1 line-clamp-2 leading-tight h-8">
                   {product.name}
                 </h4>
+
+                {product.variantName && (
+                  <span className="text-[10px] font-semibold text-slate-600 mb-1 block">
+                    {product.variantName}
+                  </span>
+                )}
+                
+                {product.description && (
+                  <p className="text-[9px] text-slate-500 mb-2 line-clamp-2 leading-tight">
+                    {product.description}
+                  </p>
+                )}
                 
                 <div className="mt-auto pt-1 flex items-center justify-between">
                   <div>
@@ -526,16 +599,25 @@ function Home() {
                     <span className="text-[9px] text-slate-400 line-through">₹{product.originalPrice}</span>
                   </div>
                   
-                  <button 
-                    onClick={() => handleAdd(product)}
-                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all active:scale-90 ${
-                      addedId === product.id 
-                      ? 'bg-slate-100 text-black border border-slate-200' 
-                      : 'bg-black text-white'
-                    }`}
-                  >
-                    {addedId === product.id ? 'Added' : 'Add'}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => openDealModal(product)}
+                      className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
+                      title="Request Deal (Bulk)"
+                    >
+                      <Handshake size={14} />
+                    </button>
+                    <button 
+                      onClick={() => handleAdd(product)}
+                      className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all active:scale-90 ${
+                        addedId === product.id 
+                        ? 'bg-slate-100 text-black border border-slate-200' 
+                        : 'bg-black text-white'
+                      }`}
+                    >
+                      {addedId === product.id ? 'Added' : 'Add'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -546,6 +628,72 @@ function Home() {
           )}
         </div>
       </section>
+
+      {/* DEAL MODAL */}
+      {dealModalOpen && dealProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-5 w-full max-w-sm relative shadow-2xl">
+            <button 
+              onClick={() => setDealModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-black"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-lg overflow-hidden bg-slate-50 shrink-0">
+                <img src={dealProduct.image} className="w-full h-full object-cover" alt="" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm leading-tight">{dealProduct.name}</h3>
+                <p className="text-xs text-slate-500">Current Price: ₹{dealProduct.price}</p>
+              </div>
+            </div>
+
+            <h2 className="text-lg font-black mb-4">Request Custom Deal</h2>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">Bulk Quantity Expected</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={dealQuantity}
+                  onChange={(e) => setDealQuantity(parseInt(e.target.value) || 0)}
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-black text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">Your Expected Price (₹)</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={dealPrice}
+                  onChange={(e) => setDealPrice(parseInt(e.target.value) || 0)}
+                  className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-black text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-600 block mb-1">Message for Admin (Optional)</label>
+                <textarea 
+                  value={dealMessage}
+                  onChange={(e) => setDealMessage(e.target.value)}
+                  placeholder="E.g., Ready to pay upfront if given this rate."
+                  className="w-full h-20 p-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-black text-xs resize-none"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={submitDealRequest}
+              disabled={isSubmittingDeal}
+              className="w-full h-12 bg-black text-white font-bold rounded-xl mt-5 hover:bg-slate-800 disabled:opacity-50"
+            >
+              {isSubmittingDeal ? 'Sending Request...' : 'Send Deal Request'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

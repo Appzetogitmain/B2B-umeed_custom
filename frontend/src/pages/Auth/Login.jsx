@@ -86,7 +86,7 @@ function Login() {
       setSubmitting(true)
 
       try {
-        const response = await fetch('http://localhost:5200/api/v1/auth/retailer/login', {
+        const response = await fetch(`${getBackendUrl()}/api/v1/auth/retailer/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -125,7 +125,7 @@ function Login() {
       setSubmitting(true)
 
       try {
-        const response = await fetch('http://localhost:5200/api/v1/auth/retailer/partner-login', {
+        const response = await fetch(`${getBackendUrl()}/api/v1/auth/retailer/partner-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)

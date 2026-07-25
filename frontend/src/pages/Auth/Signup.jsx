@@ -84,7 +84,7 @@ function Signup() {
     setSubmitting(true)
 
     try {
-      const response = await fetch('http://localhost:5200/api/v1/auth/retailer/signup', {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/retailer/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

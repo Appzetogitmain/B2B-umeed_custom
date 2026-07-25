@@ -25,7 +25,7 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        const response = await fetch('http://localhost:5200/api/v1/dashboard/stats');
+        const response = await fetch(`${getBackendUrl()}/api/v1/dashboard/stats`);
         const data = await response.json();
         
         if (response.ok) {

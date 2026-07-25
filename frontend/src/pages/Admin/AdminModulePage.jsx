@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { adminModuleContent } from '../../data/adminModules'
+import AdminDealManagement from '../../components/AdminDealManagement'
 
 function getStatusBadgeClasses(status) {
   if (status === 'Active') {
@@ -264,6 +265,7 @@ function AdminModulePage() {
   const isPaymentsModule = module === 'payments-reports'
   const isMonthlyTargetModule = module === 'monthly-targets'
   const isSettingsModule = module === 'settings'
+  const isDealModule = module === 'deal-management'
 
   const [targetList, setTargetList] = useState([])
   const [retailers, setRetailers] = useState([])
@@ -324,7 +326,7 @@ function AdminModulePage() {
     try {
       setIsUpdatingPassword(true)
       const adminEmail = localStorage.getItem('umeed-admin-email') || 'admin@umeed.com'
-      const response = await fetch('http://localhost:5200/api/v1/auth/admin/update-password', {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/update-password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: adminEmail, newPassword: adminPassword })
@@ -432,7 +434,7 @@ function AdminModulePage() {
 
   const fetchRetailers = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/auth/admin/retailers')
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers`)
       if (!response.ok) throw new Error('Failed to fetch retailers')
       const data = await response.json()
       const formatted = data.map(r => ({ ...r, id: r._id, address: r.deliveryAddress || '' }))
@@ -450,7 +452,7 @@ function AdminModulePage() {
 
   const fetchPartners = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/partners')
+      const response = await fetch(`${getBackendUrl()}/api/v1/partners`)
       if (!response.ok) throw new Error('Failed to fetch partners')
       const data = await response.json()
       const formatted = data.map(p => ({ ...p, id: p._id }))
@@ -469,7 +471,7 @@ function AdminModulePage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/orders')
+      const response = await fetch(`${getBackendUrl()}/api/v1/orders`)
       if (!response.ok) throw new Error('Failed to fetch orders')
       const data = await response.json()
       setOrders(data)
@@ -486,7 +488,7 @@ function AdminModulePage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/categories')
+      const response = await fetch(`${getBackendUrl()}/api/v1/categories`)
       if (response.ok) {
         const data = await response.json()
         setCategories(data)
@@ -504,7 +506,7 @@ function AdminModulePage() {
 
   const fetchBanners = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/banners')
+      const response = await fetch(`${getBackendUrl()}/api/v1/banners`)
       if (response.ok) {
         const data = await response.json()
         setBanners(data)
@@ -571,7 +573,7 @@ function AdminModulePage() {
 
   const fetchProducts = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/products?search=${encodeURIComponent(search)}` : 'http://localhost:5200/api/v1/products'
+      const url = search ? `http://localhost:5200/api/v1/products?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/products`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -593,7 +595,7 @@ function AdminModulePage() {
 
   const fetchCommissionPolicies = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/commissions/policies?search=${encodeURIComponent(search)}` : 'http://localhost:5200/api/v1/commissions/policies'
+      const url = search ? `http://localhost:5200/api/v1/commissions/policies?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/commissions/policies`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -606,7 +608,7 @@ function AdminModulePage() {
 
   const fetchSettlements = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/commissions/settlements')
+      const response = await fetch(`${getBackendUrl()}/api/v1/commissions/settlements`)
       if (response.ok) {
         const data = await response.json()
         setSettlements(data)
@@ -625,7 +627,7 @@ function AdminModulePage() {
 
   const fetchVouchers = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/vouchers?search=${encodeURIComponent(search)}` : 'http://localhost:5200/api/v1/vouchers'
+      const url = search ? `http://localhost:5200/api/v1/vouchers?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/vouchers`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -645,7 +647,7 @@ function AdminModulePage() {
 
   const fetchWalletTransactions = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/wallets')
+      const response = await fetch(`${getBackendUrl()}/api/v1/wallets`)
       if (response.ok) {
         const data = await response.json()
         setWalletTransactions(data)
@@ -663,7 +665,7 @@ function AdminModulePage() {
 
   const fetchPaymentRecords = async () => {
     try {
-      const response = await fetch('http://localhost:5200/api/v1/payments')
+      const response = await fetch(`${getBackendUrl()}/api/v1/payments`)
       if (response.ok) {
         const data = await response.json()
         setPaymentRecords(data)
@@ -681,7 +683,7 @@ function AdminModulePage() {
 
   const fetchTargets = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/targets?search=${encodeURIComponent(search)}` : 'http://localhost:5200/api/v1/targets'
+      const url = search ? `http://localhost:5200/api/v1/targets?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/targets`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -972,7 +974,7 @@ function AdminModulePage() {
           body: JSON.stringify(retailerForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/auth/admin/retailers', {
+        response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(retailerForm)
@@ -1023,7 +1025,7 @@ function AdminModulePage() {
           body: JSON.stringify(categoryForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/categories', {
+        response = await fetch(`${getBackendUrl()}/api/v1/categories`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(categoryForm)
@@ -1074,7 +1076,7 @@ function AdminModulePage() {
           body: JSON.stringify(bannerForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/banners', {
+        response = await fetch(`${getBackendUrl()}/api/v1/banners`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bannerForm)
@@ -1122,7 +1124,7 @@ function AdminModulePage() {
           body: JSON.stringify(partnerForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/partners', {
+        response = await fetch(`${getBackendUrl()}/api/v1/partners`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(partnerForm)
@@ -1257,7 +1259,7 @@ function AdminModulePage() {
           body: JSON.stringify(productForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/products', {
+        response = await fetch(`${getBackendUrl()}/api/v1/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productForm)
@@ -1356,7 +1358,7 @@ function AdminModulePage() {
           body: JSON.stringify(commissionForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/commissions/policies', {
+        response = await fetch(`${getBackendUrl()}/api/v1/commissions/policies`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(commissionForm)
@@ -1453,7 +1455,7 @@ function AdminModulePage() {
           body: JSON.stringify(voucherForm)
         })
       } else {
-        response = await fetch('http://localhost:5200/api/v1/vouchers', {
+        response = await fetch(`${getBackendUrl()}/api/v1/vouchers`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(voucherForm)
@@ -1513,7 +1515,7 @@ function AdminModulePage() {
 
     try {
       setIsSubmitting(true)
-      const response = await fetch('http://localhost:5200/api/v1/wallets/adjust', {
+      const response = await fetch(`${getBackendUrl()}/api/v1/wallets/adjust`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -5412,7 +5414,7 @@ function AdminModulePage() {
         <p className="mt-1 text-sm text-slate-500">{content.subtitle}</p>
       </header>
 
-      {!isSettingsModule && (
+      {!isSettingsModule && !isDealModule && (
         <>
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
             <h2 className="text-base font-semibold text-slate-900">Operational Modules</h2>
@@ -5444,6 +5446,10 @@ function AdminModulePage() {
             </div>
           </section>
         </>
+      )}
+
+      {isDealModule && (
+        <AdminDealManagement />
       )}
 
       {content.topProducts ? (
