@@ -5,7 +5,7 @@ import WalletTransaction from '../models/WalletTransaction.js';
 export const getDashboardStats = async (req, res) => {
   try {
     const now = new Date();
-    
+
     // === CURRENT PERIOD (last 7 days) ===
     const thisWeekStart = new Date();
     thisWeekStart.setDate(now.getDate() - 6);
@@ -19,14 +19,14 @@ export const getDashboardStats = async (req, res) => {
 
     // 1. Basic KPIs
     const totalOrdersCount = await Order.countDocuments({ status: { $ne: 'Rejected' } });
-    
+
     const revenueResult = await Order.aggregate([
       { $match: { status: { $ne: 'Rejected' } } },
       { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
     ]);
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
     const avgRevenue = totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0;
-    
+
     const activeRetailersCount = await Retailer.countDocuments({ status: 'Active' });
 
     // === DELTA CALCULATIONS (this week vs last week) ===

@@ -125,15 +125,15 @@ export const getSettlements = async (req, res) => {
       for (let order of deliveredOrders) {
         totalOrderAmount += order.totalAmount || 0;
         let orderCommission = 0;
-        
+
         for (let policy of policies) {
-          if (policy.policyType === 'Delivery Partner' && 
-              policy.partnerRole.toLowerCase() === (partner.vehicleType || 'Bike').toLowerCase()) {
+          if (policy.policyType === 'Delivery Partner' &&
+            policy.partnerRole.toLowerCase() === (partner.vehicleType || 'Bike').toLowerCase()) {
             orderCommission += (order.totalAmount * policy.percentage) / 100;
           } else if (policy.policyType === 'Category') {
             for (let item of order.items) {
-              if (item.product && item.product.category && 
-                  item.product.category.toLowerCase() === policy.category.toLowerCase()) {
+              if (item.product && item.product.category &&
+                item.product.category.toLowerCase() === policy.category.toLowerCase()) {
                 const itemTotal = (item.price || 0) * (item.quantity || 1);
                 orderCommission += (itemTotal * policy.percentage) / 100;
               }
@@ -144,7 +144,7 @@ export const getSettlements = async (req, res) => {
       }
 
       let settlement = await Settlement.findOne({ partnerId: partner._id, period: periodString });
-      
+
       if (!settlement) {
         if (totalOrders > 0) {
           await Settlement.create({

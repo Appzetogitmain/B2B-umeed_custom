@@ -29,7 +29,7 @@ export const createCategory = async (req, res) => {
     }
 
     let imageUrl = '';
-    
+
     // Process Multer file if uploaded
     if (req.file) {
       try {
@@ -38,7 +38,7 @@ export const createCategory = async (req, res) => {
         console.error('Local category upload error:', err);
         return res.status(500).json({ message: 'Error uploading category image locally' });
       }
-    } 
+    }
     // Process Base64 image if sent by frontend
     else if (image && image.startsWith('data:image')) {
       try {
@@ -76,7 +76,7 @@ export const updateCategory = async (req, res) => {
     }
 
     let imageUrl = category.image;
-    
+
     // Process Multer file if uploaded
     if (req.file) {
       try {
@@ -89,7 +89,7 @@ export const updateCategory = async (req, res) => {
         console.error('Local category upload error:', err);
         return res.status(500).json({ message: 'Error uploading image' });
       }
-    } 
+    }
     // Process Base64 image if sent by frontend
     else if (image && image.startsWith('data:image')) {
       try {
@@ -105,8 +105,8 @@ export const updateCategory = async (req, res) => {
       }
     } else if (image !== undefined) {
       if (image !== category.image) {
-         // Different URL provided, maybe clear image
-         if (category.image) deleteImage(category.image);
+        // Different URL provided, maybe clear image
+        if (category.image) deleteImage(category.image);
       }
       imageUrl = image;
     }
@@ -130,13 +130,14 @@ export const deleteCategory = async (req, res) => {
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }
-    
+
     if (category.image) {
       deleteImage(category.image);
     }
 
     await category.deleteOne();
     res.json({ message: 'Category deleted successfully' });
+
   } catch (error) {
     console.error('Delete category error:', error);
     res.status(500).json({ message: 'Error deleting category' });
