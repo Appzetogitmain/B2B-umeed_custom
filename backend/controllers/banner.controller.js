@@ -29,7 +29,7 @@ export const createBanner = async (req, res) => {
     }
 
     let imageUrl = '';
-    
+
     // Process Multer file if uploaded
     if (req.file) {
       try {
@@ -38,7 +38,7 @@ export const createBanner = async (req, res) => {
         console.error('Local banner upload error:', err);
         return res.status(500).json({ message: 'Error uploading banner image locally' });
       }
-    } 
+    }
     // Process Base64 image if sent by frontend
     else if (image && image.startsWith('data:image')) {
       try {
@@ -77,7 +77,7 @@ export const updateBanner = async (req, res) => {
     }
 
     let imageUrl = banner.image;
-    
+
     // Process Multer file if uploaded
     if (req.file) {
       try {
@@ -90,7 +90,7 @@ export const updateBanner = async (req, res) => {
         console.error('Local banner upload error:', err);
         return res.status(500).json({ message: 'Error uploading image' });
       }
-    } 
+    }
     // Process Base64 image if sent by frontend
     else if (image && image.startsWith('data:image')) {
       try {
@@ -106,7 +106,7 @@ export const updateBanner = async (req, res) => {
       }
     } else if (image !== undefined) {
       if (image !== banner.image) {
-         if (banner.image) deleteImage(banner.image);
+        if (banner.image) deleteImage(banner.image);
       }
       imageUrl = image;
     }
@@ -131,7 +131,7 @@ export const deleteBanner = async (req, res) => {
     if (!banner) {
       return res.status(404).json({ message: 'Banner not found' });
     }
-    
+
     if (banner.image) {
       deleteImage(banner.image);
     }

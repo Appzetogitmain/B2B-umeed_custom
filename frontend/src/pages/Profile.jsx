@@ -225,6 +225,13 @@ function Profile() {
               onClick={() => navigate('/retailer/earnings')}
             />
           )}
+          <ProfileTab
+            icon={<ShieldCheck size={18} />}
+            label="Legal"
+            value="Privacy Policy"
+            hasArrow
+            onClick={() => navigate(isDeliveryRoute ? '/delivery/privacy-policy' : '/retailer/privacy-policy')}
+          />
         </div>
       </section>
 

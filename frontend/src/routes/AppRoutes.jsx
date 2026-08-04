@@ -12,6 +12,7 @@ import Cart from '../pages/Cart'
 import OrderDetail from '../pages/OrderDetail'
 import ProductDetail from '../pages/ProductDetail'
 import Settings from '../pages/Settings'
+import PrivacyPolicy from '../pages/PrivacyPolicy'
 import EarningAnalytics from '../pages/EarningAnalytics'
 import AdminLogin from '../pages/Admin/AdminLogin'
 import AdminDashboard from '../pages/Admin/AdminDashboard'
@@ -73,6 +74,7 @@ function AppRoutes() {
         <Route path="wallet" element={<Wallet />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
         <Route path="earnings" element={<EarningAnalytics />} />
         <Route path="cart" element={<Cart />} />
       </Route>
@@ -92,6 +94,7 @@ function AppRoutes() {
         <Route path="earnings" element={<DeliveryEarnings />} />
         <Route path="performance" element={<DeliveryPerformance />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/retailer/auth" replace />} />
