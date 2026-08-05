@@ -1260,9 +1260,17 @@ function AdminModulePage() {
       Object.keys(productForm).forEach((key) => {
         if (key === 'images') {
           if (Array.isArray(productForm.images)) {
+            const existingUrls = []
             productForm.images.forEach((img) => {
-              formData.append('images', img)
+              if (img instanceof File) {
+                formData.append('images', img)
+              } else if (typeof img === 'string' && img.startsWith('data:image')) {
+                formData.append('images', img)
+              } else if (img) {
+                existingUrls.push(img)
+              }
             })
+            formData.append('existingImages', JSON.stringify(existingUrls))
           }
         } else {
           formData.append(key, productForm[key] !== null && productForm[key] !== undefined ? productForm[key] : '')

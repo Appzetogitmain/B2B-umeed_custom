@@ -48,7 +48,7 @@ export const getProductById = async (req, res) => {
 // Create Product
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, variantName, images, price, mrp, discount, stock, description } = req.body;
+    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description } = req.body;
 
     if (!name || !category || price === undefined || mrp === undefined || stock === undefined) {
       return res.status(400).json({ message: 'Please provide all required fields' });
@@ -72,7 +72,17 @@ export const createProduct = async (req, res) => {
     }
     
     // Process Base64 images or URLs if frontend sends them
-    const imagesArray = images ? (Array.isArray(images) ? images : [images]) : [];
+    let imagesArray = [];
+    if (existingImages) {
+      try {
+        imagesArray = JSON.parse(existingImages);
+      } catch (err) {
+        imagesArray = Array.isArray(existingImages) ? existingImages : [existingImages];
+      }
+    } else if (images) {
+      imagesArray = Array.isArray(images) ? images : [images];
+    }
+
     if (imagesArray.length > 0) {
       try {
         const base64UploadPromises = imagesArray.map(async (img) => {
@@ -115,7 +125,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, variantName, images, price, mrp, discount, stock, description } = req.body;
+    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description } = req.body;
 
     const product = await Product.findById(id);
     if (!product) {
@@ -139,9 +149,19 @@ export const updateProduct = async (req, res) => {
       }
     }
 
-    // Process Base64 images if frontend still sends them
+    // Process Base64 images or existing URLs
     let retainedImages = [];
-    const imagesArray = images ? (Array.isArray(images) ? images : [images]) : [];
+    let imagesArray = [];
+    if (existingImages) {
+      try {
+        imagesArray = JSON.parse(existingImages);
+      } catch (err) {
+        imagesArray = Array.isArray(existingImages) ? existingImages : [existingImages];
+      }
+    } else if (images) {
+      imagesArray = Array.isArray(images) ? images : [images];
+    }
+
     if (imagesArray.length > 0) {
       try {
         const base64UploadPromises = imagesArray.map(async (img) => {
