@@ -32,7 +32,7 @@ function Login() {
     setForgotSubmitting(true)
 
     try {
-      const response = await fetch('https://umeedretailers.com/api/v1/auth/retailer/forgot-password', {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/retailer/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail.trim() })

@@ -574,7 +574,7 @@ function AdminModulePage() {
 
   const fetchProducts = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/products?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/products`
+      const url = search ? `${getBackendUrl()}/api/v1/products?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/products`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -596,7 +596,7 @@ function AdminModulePage() {
 
   const fetchCommissionPolicies = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/commissions/policies?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/commissions/policies`
+      const url = search ? `${getBackendUrl()}/api/v1/commissions/policies?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/commissions/policies`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -628,7 +628,7 @@ function AdminModulePage() {
 
   const fetchVouchers = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/vouchers?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/vouchers`
+      const url = search ? `${getBackendUrl()}/api/v1/vouchers?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/vouchers`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -684,7 +684,7 @@ function AdminModulePage() {
 
   const fetchTargets = async (search = '') => {
     try {
-      const url = search ? `http://localhost:5200/api/v1/targets?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/targets`
+      const url = search ? `${getBackendUrl()}/api/v1/targets?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/targets`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
@@ -969,7 +969,7 @@ function AdminModulePage() {
     try {
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/auth/admin/retailers/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(retailerForm)
@@ -997,7 +997,7 @@ function AdminModulePage() {
 
   const handleRetailerDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/auth/admin/retailers/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1020,7 +1020,7 @@ function AdminModulePage() {
     try {
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/categories/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/categories/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(categoryForm)
@@ -1047,7 +1047,7 @@ function AdminModulePage() {
   const handleCategoryDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this category?')) return
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/categories/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/categories/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1071,7 +1071,7 @@ function AdminModulePage() {
     try {
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/banners/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/banners/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bannerForm)
@@ -1098,7 +1098,7 @@ function AdminModulePage() {
   const handleBannerDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this banner?')) return
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/banners/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/banners/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1119,7 +1119,7 @@ function AdminModulePage() {
     try {
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/partners/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/partners/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(partnerForm)
@@ -1147,7 +1147,7 @@ function AdminModulePage() {
 
   const handlePartnerDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/partners/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/partners/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1163,7 +1163,7 @@ function AdminModulePage() {
   const handleOrderDelete = async (id) => {
     if (!window.confirm('Are you sure you want to permanently delete this order from the database?')) return
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/orders/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/orders/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1182,7 +1182,7 @@ function AdminModulePage() {
 
   const handleOrderStatusUpdate = async (id, newStatus, reason = '') => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/orders/${id}/status`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/orders/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus, rejectionReason: reason })
@@ -1203,7 +1203,7 @@ function AdminModulePage() {
 
   const handleOrderAssignPartner = async (id, partnerId) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/orders/${id}/assign`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/orders/${id}/assign`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deliveryPartnerId: partnerId || null })
@@ -1254,7 +1254,7 @@ function AdminModulePage() {
       setIsSubmitting(true)
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/products/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/products/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productForm)
@@ -1283,7 +1283,7 @@ function AdminModulePage() {
   const handleProductDelete = async (id) => {
     if (!window.confirm('Are you sure you want to permanently delete this product?')) return
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/products/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/products/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1307,7 +1307,7 @@ function AdminModulePage() {
 
     try {
       setIsSubmitting(true)
-      const response = await fetch(`http://localhost:5200/api/v1/products/${selectedInventoryProduct._id}/stock`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/products/${selectedInventoryProduct._id}/stock`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stock: Number(newStockValue) })
@@ -1353,7 +1353,7 @@ function AdminModulePage() {
       setIsSubmitting(true)
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/commissions/policies/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/commissions/policies/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(commissionForm)
@@ -1383,7 +1383,7 @@ function AdminModulePage() {
 
   const handleCommissionDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/commissions/policies/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/commissions/policies/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1399,7 +1399,7 @@ function AdminModulePage() {
 
   const handleSettlementStatusUpdate = async (id, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/commissions/settlements/${id}/status`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/commissions/settlements/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payoutStatus: newStatus })
@@ -1450,7 +1450,7 @@ function AdminModulePage() {
       setIsSubmitting(true)
       let response
       if (modalMode === 'edit') {
-        response = await fetch(`http://localhost:5200/api/v1/vouchers/${selectedId}`, {
+        response = await fetch(`${getBackendUrl()}/api/v1/vouchers/${selectedId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(voucherForm)
@@ -1480,7 +1480,7 @@ function AdminModulePage() {
 
   const handleVoucherDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/vouchers/${id}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/vouchers/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) {
@@ -1546,7 +1546,7 @@ function AdminModulePage() {
 
   const handleWalletFreezeToggle = async (retailerId) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/wallets/freeze/${retailerId}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/wallets/freeze/${retailerId}`, {
         method: 'POST'
       })
       if (!response.ok) {
@@ -1563,7 +1563,7 @@ function AdminModulePage() {
 
   const handlePaymentReconcile = async (orderId) => {
     try {
-      const response = await fetch(`http://localhost:5200/api/v1/payments/${orderId}/reconcile`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/payments/${orderId}/reconcile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'Paid' })

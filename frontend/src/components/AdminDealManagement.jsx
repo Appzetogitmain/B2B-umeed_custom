@@ -31,7 +31,7 @@ function AdminDealManagement() {
   const handleUpdateDeal = async (id, status, counterRate, counterQuantity) => {
     try {
       const token = localStorage.getItem('umeed-admin-token');
-      const res = await fetch(`http://localhost:5200/api/v1/deals/${id}/admin-respond`, {
+      const res = await fetch(`${getBackendUrl()}/api/v1/deals/${id}/admin-respond`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ function AdminDealManagement() {
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    <img src={deal.productId?.images?.[0]?.startsWith('http') ? deal.productId.images[0] : (deal.productId?.images?.[0] ? `http://localhost:5200${deal.productId.images[0]}` : 'https://via.placeholder.com/150')} className="w-10 h-10 rounded-md object-cover" alt="" />
+                    <img src={deal.productId?.images?.[0]?.startsWith('http') ? deal.productId.images[0] : (deal.productId?.images?.[0] ? `${getBackendUrl()}${deal.productId.images[0]}` : 'https://via.placeholder.com/150')} className="w-10 h-10 rounded-md object-cover" alt="" />
                     <div>
                       <p className="font-semibold">{deal.productId?.name}</p>
                       <p className="text-xs text-slate-500">MRP: ₹{deal.productId?.mrp}</p>

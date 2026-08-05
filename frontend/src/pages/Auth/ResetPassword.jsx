@@ -1,3 +1,4 @@
+import { getBackendUrl } from '../../utils/api';
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ShieldCheck, KeyRound, ArrowRight } from 'lucide-react'
@@ -34,7 +35,7 @@ function ResetPassword() {
     setSubmitting(true)
 
     try {
-      const response = await fetch(`https://umeedretailers.com/api/v1/auth/retailer/reset-password/${token}`, {
+      const response = await fetch(`${getBackendUrl()}/api/v1/auth/retailer/reset-password/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: form.password })
