@@ -71,10 +71,11 @@ export const createProduct = async (req, res) => {
       }
     }
     
-    // Process Base64 images if frontend still sends them
-    if (Array.isArray(images)) {
+    // Process Base64 images or URLs if frontend sends them
+    const imagesArray = images ? (Array.isArray(images) ? images : [images]) : [];
+    if (imagesArray.length > 0) {
       try {
-        const base64UploadPromises = images.map(async (img) => {
+        const base64UploadPromises = imagesArray.map(async (img) => {
           if (img && img.startsWith('data:image')) {
             const buffer = getBufferFromBase64(img);
             return await processAndSaveImage(buffer, 'menu');
@@ -140,9 +141,10 @@ export const updateProduct = async (req, res) => {
 
     // Process Base64 images if frontend still sends them
     let retainedImages = [];
-    if (Array.isArray(images)) {
+    const imagesArray = images ? (Array.isArray(images) ? images : [images]) : [];
+    if (imagesArray.length > 0) {
       try {
-        const base64UploadPromises = images.map(async (img) => {
+        const base64UploadPromises = imagesArray.map(async (img) => {
           if (img && img.startsWith('data:image')) {
             const buffer = getBufferFromBase64(img);
             return await processAndSaveImage(buffer, 'menu');

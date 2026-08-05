@@ -245,9 +245,8 @@ function Field({ label, children }) {
 }
 
 function baseInputClass(readOnly) {
-  return `w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 ${
-    readOnly ? 'cursor-default bg-slate-50' : ''
-  }`
+  return `w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 ${readOnly ? 'cursor-default bg-slate-50' : ''
+    }`
 }
 
 function AdminModulePage() {
@@ -768,19 +767,19 @@ function AdminModulePage() {
       navigator.mediaDevices.getUserMedia({
         video: { facingMode: facingMode }
       })
-      .then(s => {
-        activeStream = s;
-        setStream(s);
-        const videoElement = document.getElementById('camera-preview');
-        if (videoElement) {
-          videoElement.srcObject = s;
-        }
-      })
-      .catch(err => {
-        console.error('Error accessing camera:', err);
-        setModalError('Failed to access camera. Please check permissions.');
-        setCameraActive(false);
-      });
+        .then(s => {
+          activeStream = s;
+          setStream(s);
+          const videoElement = document.getElementById('camera-preview');
+          if (videoElement) {
+            videoElement.srcObject = s;
+          }
+        })
+        .catch(err => {
+          console.error('Error accessing camera:', err);
+          setModalError('Failed to access camera. Please check permissions.');
+          setCameraActive(false);
+        });
     } else {
       stopCameraTracks();
     }
@@ -827,7 +826,7 @@ function AdminModulePage() {
     }
   };
 
-  const handleMultipleImageUpload = async (e) => {
+  const handleMultipleImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
@@ -839,31 +838,14 @@ function AdminModulePage() {
 
     setModalError('');
 
-    try {
-      const readPromises = files.map(file => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      });
-
-      const base64Images = await Promise.all(readPromises);
-
-      setProductForm(prev => {
-        const newImages = [...prev.images, ...base64Images].slice(0, 4);
-        return {
-          ...prev,
-          images: newImages
-        };
-      });
-    } catch (err) {
-      console.error('Error reading files:', err);
-      setModalError('Error reading selected files');
-    } finally {
-      e.target.value = ''; // Always clear file input value so onChange will fire even for same file selection
-    }
+    setProductForm(prev => {
+      const newImages = [...prev.images, ...files].slice(0, 4);
+      return {
+        ...prev,
+        images: newImages
+      };
+    });
+    e.target.value = ''; // Always clear file input value so onChange will fire even for same file selection
   };
 
   const removeProductImage = (indexToRemove) => {
@@ -968,17 +950,29 @@ function AdminModulePage() {
 
     try {
       let response
+      const formData = new FormData()
+      Object.keys(retailerForm).forEach((key) => {
+        const val = retailerForm[key]
+        if (key === 'photo') {
+          if (val instanceof File) {
+            formData.append('photo', val)
+          } else if (val) {
+            formData.append('photo', val)
+          }
+        } else {
+          formData.append(key, val !== null && val !== undefined ? val : '')
+        }
+      })
+
       if (modalMode === 'edit') {
         response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers/${selectedId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(retailerForm)
+          body: formData
         })
       } else {
         response = await fetch(`${getBackendUrl()}/api/v1/auth/admin/retailers`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(retailerForm)
+          body: formData
         })
       }
 
@@ -1019,17 +1013,21 @@ function AdminModulePage() {
     }
     try {
       let response
+      const formData = new FormData()
+      formData.append('categoryName', categoryForm.categoryName.trim())
+      if (categoryForm.image) {
+        formData.append('image', categoryForm.image)
+      }
+
       if (modalMode === 'edit') {
         response = await fetch(`${getBackendUrl()}/api/v1/categories/${selectedId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(categoryForm)
+          body: formData
         })
       } else {
         response = await fetch(`${getBackendUrl()}/api/v1/categories`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(categoryForm)
+          body: formData
         })
       }
       const data = await response.json()
@@ -1070,17 +1068,22 @@ function AdminModulePage() {
     }
     try {
       let response
+      const formData = new FormData()
+      formData.append('title', bannerForm.title.trim())
+      formData.append('description', bannerForm.description.trim())
+      if (bannerForm.image) {
+        formData.append('image', bannerForm.image)
+      }
+
       if (modalMode === 'edit') {
         response = await fetch(`${getBackendUrl()}/api/v1/banners/${selectedId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bannerForm)
+          body: formData
         })
       } else {
         response = await fetch(`${getBackendUrl()}/api/v1/banners`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bannerForm)
+          body: formData
         })
       }
       const data = await response.json()
@@ -1253,17 +1256,28 @@ function AdminModulePage() {
     try {
       setIsSubmitting(true)
       let response
+      const formData = new FormData()
+      Object.keys(productForm).forEach((key) => {
+        if (key === 'images') {
+          if (Array.isArray(productForm.images)) {
+            productForm.images.forEach((img) => {
+              formData.append('images', img)
+            })
+          }
+        } else {
+          formData.append(key, productForm[key] !== null && productForm[key] !== undefined ? productForm[key] : '')
+        }
+      })
+
       if (modalMode === 'edit') {
         response = await fetch(`${getBackendUrl()}/api/v1/products/${selectedId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productForm)
+          body: formData
         })
       } else {
         response = await fetch(`${getBackendUrl()}/api/v1/products`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productForm)
+          body: formData
         })
       }
       const data = await response.json()
@@ -1316,7 +1330,7 @@ function AdminModulePage() {
       if (!response.ok) {
         throw new Error(data.message || 'Failed to update stock quantity')
       }
-      
+
       await fetchProducts()
       setSelectedInventoryProduct(null)
       setNewStockValue(0)
@@ -1617,9 +1631,9 @@ function AdminModulePage() {
                     <td className="px-3 py-3 font-semibold text-slate-800">{cat.categoryName}</td>
                     <td className="px-3 py-3">
                       {cat.image ? (
-                        <img 
-                          src={getImageUrl(cat.image)} 
-                          alt={cat.categoryName} 
+                        <img
+                          src={getImageUrl(cat.image)}
+                          alt={cat.categoryName}
                           className="h-10 w-10 rounded-lg object-cover border border-slate-100"
                         />
                       ) : (
@@ -1709,11 +1723,7 @@ function AdminModulePage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0]
                         if (file) {
-                          const reader = new FileReader()
-                          reader.onloadend = () => {
-                            setCategoryForm({ ...categoryForm, image: reader.result })
-                          }
-                          reader.readAsDataURL(file)
+                          setCategoryForm({ ...categoryForm, image: file })
                         }
                       }}
                       className="hidden"
@@ -1727,7 +1737,7 @@ function AdminModulePage() {
                     </label>
                     {categoryForm.image && (
                       <img
-                        src={getImageUrl(categoryForm.image)}
+                        src={categoryForm.image instanceof File ? URL.createObjectURL(categoryForm.image) : getImageUrl(categoryForm.image)}
                         alt="Preview"
                         className="h-10 w-10 rounded-lg object-cover border border-slate-200"
                       />
@@ -1794,9 +1804,9 @@ function AdminModulePage() {
                     <td className="px-3 py-3 text-slate-500 max-w-[200px] truncate">{banner.description || 'No Description'}</td>
                     <td className="px-3 py-3">
                       {banner.image ? (
-                        <img 
-                          src={getImageUrl(banner.image)} 
-                          alt={banner.title} 
+                        <img
+                          src={getImageUrl(banner.image)}
+                          alt={banner.title}
                           className="h-10 w-20 rounded-lg object-cover border border-slate-100"
                         />
                       ) : (
@@ -1899,11 +1909,7 @@ function AdminModulePage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0]
                         if (file) {
-                          const reader = new FileReader()
-                          reader.onloadend = () => {
-                            setBannerForm({ ...bannerForm, image: reader.result })
-                          }
-                          reader.readAsDataURL(file)
+                          setBannerForm({ ...bannerForm, image: file })
                         }
                       }}
                       className="hidden"
@@ -1916,9 +1922,9 @@ function AdminModulePage() {
                       Choose File
                     </label>
                     {bannerForm.image && (
-                      <img 
-                        src={getImageUrl(bannerForm.image)} 
-                        alt="Preview" 
+                      <img
+                        src={bannerForm.image instanceof File ? URL.createObjectURL(bannerForm.image) : getImageUrl(bannerForm.image)}
+                        alt="Preview"
                         className="h-10 w-20 rounded-lg object-cover border border-slate-100"
                       />
                     )}
@@ -1998,11 +2004,10 @@ function AdminModulePage() {
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        retailer.registeredBy === 'admin'
+                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${retailer.registeredBy === 'admin'
                           ? 'bg-blue-50 text-blue-600 border border-blue-100'
                           : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                      }`}>
+                        }`}>
                         {retailer.registeredBy === 'admin' ? 'Admin' : 'Retailer App'}
                       </span>
                     </td>
@@ -2421,7 +2426,7 @@ function AdminModulePage() {
             <Field label="Retailer Photo">
               {retailerForm.photo && (
                 <div className="mb-2 relative w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-                  <img src={getImageUrl(retailerForm.photo)} alt="Retailer Document" className="w-full h-full object-cover" />
+                  <img src={retailerForm.photo instanceof File ? URL.createObjectURL(retailerForm.photo) : getImageUrl(retailerForm.photo)} alt="Retailer Document" className="w-full h-full object-cover" />
                   {!isReadOnly && (
                     <button
                       type="button"
@@ -2441,11 +2446,7 @@ function AdminModulePage() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setRetailerForm(prev => ({ ...prev, photo: reader.result }));
-                      };
-                      reader.readAsDataURL(file);
+                      setRetailerForm(prev => ({ ...prev, photo: file }));
                     }
                   }}
                   className={baseInputClass(isReadOnly)}
@@ -2505,10 +2506,10 @@ function AdminModulePage() {
                       <div className="flex gap-1 overflow-x-auto max-w-[120px]">
                         {prod.images && prod.images.length > 0 ? (
                           prod.images.map((img, idx) => (
-                            <img 
+                            <img
                               key={idx}
-                              src={getImageUrl(img)} 
-                              alt={prod.name} 
+                              src={getImageUrl(img)}
+                              alt={prod.name}
                               className="h-10 w-10 rounded-lg object-cover border border-slate-100 flex-shrink-0"
                             />
                           ))
@@ -2526,13 +2527,12 @@ function AdminModulePage() {
                     <td className="px-3 py-3 text-slate-400 line-through">Rs {prod.mrp}</td>
                     <td className="px-3 py-3 text-emerald-600 font-bold">{prod.discount}% Off</td>
                     <td className="px-3 py-3">
-                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold border ${
-                        prod.stock <= 0 
-                          ? 'bg-rose-50 text-rose-700 border-rose-100' 
-                          : prod.stock < 10 
-                          ? 'bg-amber-50 text-amber-700 border-amber-100' 
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                      }`}>
+                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold border ${prod.stock <= 0
+                          ? 'bg-rose-50 text-rose-700 border-rose-100'
+                          : prod.stock < 10
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        }`}>
                         {prod.stock <= 0 ? 'Out of Stock' : prod.stock < 10 ? `Low Stock (${prod.stock})` : `${prod.stock} units`}
                       </span>
                     </td>
@@ -2737,13 +2737,13 @@ function AdminModulePage() {
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
                     Gallery Images {isReadOnly ? '' : '(Max 4 images)'}
                   </label>
-                  
+
                   {/* Preview grid */}
                   {productForm.images && productForm.images.length > 0 ? (
                     <div className="flex flex-wrap gap-3 mb-4">
                       {productForm.images.map((img, idx) => (
                         <div key={idx} className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
-                          <img src={getImageUrl(img)} alt="Gallery item" className="h-full w-full object-cover" />
+                          <img src={img instanceof File ? URL.createObjectURL(img) : getImageUrl(img)} alt="Gallery item" className="h-full w-full object-cover" />
                           {!isReadOnly && (
                             <button
                               type="button"
@@ -2773,7 +2773,7 @@ function AdminModulePage() {
                           onChange={handleMultipleImageUpload}
                           className="hidden"
                         />
-                        <label 
+                        <label
                           htmlFor="product-gallery-files"
                           className="cursor-pointer inline-flex flex-col items-center justify-center w-full h-full"
                         >
@@ -2803,7 +2803,7 @@ function AdminModulePage() {
                   {!isReadOnly && cameraActive && (
                     <div className="mt-4 rounded-2xl border border-slate-800 p-4 bg-slate-950 text-white flex flex-col items-center gap-3">
                       <div className="relative w-full max-w-sm rounded-xl overflow-hidden bg-black border border-slate-800 aspect-video shadow-inner">
-                        <video 
+                        <video
                           id="camera-preview"
                           autoPlay
                           playsInline
@@ -2813,7 +2813,7 @@ function AdminModulePage() {
                           {facingMode === 'user' ? 'Front Camera' : 'Back Camera'}
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 flex-wrap">
                         <button
                           type="button"
@@ -3080,7 +3080,7 @@ function AdminModulePage() {
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
           <h2 className="text-base font-semibold text-slate-900 mb-4">Inbound Orders Directory</h2>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50">
@@ -3112,7 +3112,7 @@ function AdminModulePage() {
                       Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
                       Rejected: 'bg-rose-50 text-rose-700 border border-rose-200'
                     }
-                    
+
                     return (
                       <tr key={order._id} className="hover:bg-slate-50/50">
                         <td className="px-3 py-3 font-semibold text-slate-900">
@@ -3240,11 +3240,10 @@ function AdminModulePage() {
                                 type="button"
                                 disabled={selectedOrder.status === 'Rejected'}
                                 onClick={() => handleOrderStatusUpdate(selectedOrder._id, st)}
-                                className={`px-2.5 py-1 text-xs font-semibold rounded-full border transition-all ${
-                                  isCurrent
+                                className={`px-2.5 py-1 text-xs font-semibold rounded-full border transition-all ${isCurrent
                                     ? 'bg-[#00a877] text-white border-[#00a877] shadow-sm'
                                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                                }`}
+                                  }`}
                               >
                                 {st}
                               </button>
@@ -3669,7 +3668,7 @@ function AdminModulePage() {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Quick Audits / Step steps:
                   </label>
-                  
+
                   {/* Step Buttons */}
                   <div className="grid grid-cols-4 gap-2">
                     {[+5, +10, +50, +100].map((step) => (
@@ -3756,13 +3755,13 @@ function AdminModulePage() {
         s.commissionEarned,
         s.payoutStatus
       ])
-      const csvContent = "data:text/csv;charset=utf-8," 
+      const csvContent = "data:text/csv;charset=utf-8,"
         + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      
+
       const encodedUri = encodeURI(csvContent)
       const link = document.createElement("a")
       link.setAttribute("href", encodedUri)
-      link.setAttribute("download", `Payout_Ledger_Export_${new Date().toISOString().slice(0,10)}.csv`)
+      link.setAttribute("download", `Payout_Ledger_Export_${new Date().toISOString().slice(0, 10)}.csv`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -3907,11 +3906,10 @@ function AdminModulePage() {
                         {policy.percentage}%
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider text-[10px] ${
-                          policy.status === 'Active'
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider text-[10px] ${policy.status === 'Active'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                             : 'bg-rose-50 text-rose-700 border border-rose-100'
-                        }`}>
+                          }`}>
                           {policy.status}
                         </span>
                       </td>
@@ -4030,12 +4028,12 @@ function AdminModulePage() {
                                 </button>
                               </>
                             )}
-                            
+
                             {settlement.payoutStatus === 'Hold' && (
                               <button
                                 type="button"
                                 onClick={() => handleSettlementStatusUpdate(settlement._id, 'Pending')}
-                                  className="rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 px-3.5 py-1 text-xs font-bold text-emerald-700 transition active:scale-95"
+                                className="rounded-lg bg-emerald-50 hover:bg-emerald-100 border border-emerald-250 px-3.5 py-1 text-xs font-bold text-emerald-700 transition active:scale-95"
                               >
                                 🔓 Release Hold
                               </button>
@@ -4241,13 +4239,13 @@ function AdminModulePage() {
         p.transactionId || 'N/A',
         new Date(p.createdAt).toLocaleString()
       ])
-      const csvContent = "data:text/csv;charset=utf-8," 
+      const csvContent = "data:text/csv;charset=utf-8,"
         + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      
+
       const encodedUri = encodeURI(csvContent)
       const link = document.createElement("a")
       link.setAttribute("href", encodedUri)
-      link.setAttribute("download", `Payments_Tracking_Report_${new Date().toISOString().slice(0,10)}.csv`)
+      link.setAttribute("download", `Payments_Tracking_Report_${new Date().toISOString().slice(0, 10)}.csv`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -4384,26 +4382,24 @@ function AdminModulePage() {
                         Rs {record.totalAmount?.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border ${
-                          record.paymentMethod === 'Online'
+                        <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border ${record.paymentMethod === 'Online'
                             ? 'bg-blue-50 text-blue-700 border-blue-100'
                             : record.paymentMethod === 'Wallet'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                            : 'bg-amber-50 text-amber-700 border-amber-100'
-                        }`}>
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                              : 'bg-amber-50 text-amber-700 border-amber-100'
+                          }`}>
                           {record.paymentMethod === 'Online' && '🌐 Online'}
                           {record.paymentMethod === 'Wallet' && '💳 Wallet'}
                           {record.paymentMethod === 'COD' && '💵 COD'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border ${
-                          record.paymentStatus === 'Paid'
+                        <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border ${record.paymentStatus === 'Paid'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                             : record.paymentStatus === 'Pending'
-                            ? 'bg-amber-50 text-amber-700 border-amber-100'
-                            : 'bg-red-50 text-red-700 border-red-100'
-                        }`}>
+                              ? 'bg-amber-50 text-amber-700 border-amber-100'
+                              : 'bg-red-50 text-red-700 border-red-100'
+                          }`}>
                           {record.paymentStatus === 'Paid' && '❇️ Paid'}
                           {record.paymentStatus === 'Pending' && '🕒 Pending'}
                           {record.paymentStatus === 'Failed' && '❌ Failed'}
@@ -4473,13 +4469,13 @@ function AdminModulePage() {
         t.status,
         new Date(t.createdAt).toLocaleString()
       ])
-      const csvContent = "data:text/csv;charset=utf-8," 
+      const csvContent = "data:text/csv;charset=utf-8,"
         + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      
+
       const encodedUri = encodeURI(csvContent)
       const link = document.createElement("a")
       link.setAttribute("href", encodedUri)
-      link.setAttribute("download", `Wallet_Ledger_Report_${new Date().toISOString().slice(0,10)}.csv`)
+      link.setAttribute("download", `Wallet_Ledger_Report_${new Date().toISOString().slice(0, 10)}.csv`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -4553,7 +4549,7 @@ function AdminModulePage() {
 
         {/* Dual Split Layout */}
         <div className="grid gap-6 lg:grid-cols-3">
-          
+
           {/* Left Column: Wallet Ledger (2/3 Width) */}
           <div className="lg:col-span-2 space-y-4">
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_35px_rgba(0,0,0,0.03)] space-y-4">
@@ -4622,11 +4618,10 @@ function AdminModulePage() {
                             <div className="text-[10px] text-slate-400 font-normal">{txn.retailerId?.ownerName || txn.retailerId?.name || 'N/A'}</div>
                           </td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                              txn.transactionType === 'Credit' 
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                            <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold ${txn.transactionType === 'Credit'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                                 : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            }`}>
+                              }`}>
                               {txn.transactionType === 'Credit' ? '➕ Credit' : '➖ Debit'}
                             </span>
                           </td>
@@ -4640,9 +4635,8 @@ function AdminModulePage() {
                             {txn.referenceId || 'N/A'}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${
-                              txn.status === 'Success' ? 'text-emerald-650' : 'text-red-500'
-                            }`}>
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${txn.status === 'Success' ? 'text-emerald-650' : 'text-red-500'
+                              }`}>
                               <span className={`h-1.5 w-1.5 rounded-full ${txn.status === 'Success' ? 'bg-emerald-650' : 'bg-red-500'}`}></span>
                               {txn.status}
                             </span>
@@ -4674,14 +4668,13 @@ function AdminModulePage() {
                       <p className="text-xs font-bold text-slate-800 truncate">{r.storeName}</p>
                       <p className="text-[10px] text-slate-400 truncate">{r.ownerName || r.name}</p>
                       <div className="mt-1 flex items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 text-[9px] font-bold ${
-                          r.isWalletFrozen ? 'text-red-500 bg-red-50 border border-red-100' : 'text-emerald-700 bg-emerald-50 border border-emerald-100'
-                        } px-2 py-0.5 rounded-full`}>
+                        <span className={`inline-flex items-center gap-1 text-[9px] font-bold ${r.isWalletFrozen ? 'text-red-500 bg-red-50 border border-red-100' : 'text-emerald-700 bg-emerald-50 border border-emerald-100'
+                          } px-2 py-0.5 rounded-full`}>
                           {r.isWalletFrozen ? '🔒 Frozen' : '🛡️ Active'}
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg">
                         {r.walletBalance || 'Rs 0'}
@@ -4689,11 +4682,10 @@ function AdminModulePage() {
                       <button
                         type="button"
                         onClick={() => handleWalletFreezeToggle(r._id)}
-                        className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition active:scale-95 border ${
-                          r.isWalletFrozen
+                        className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition active:scale-95 border ${r.isWalletFrozen
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
                             : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                        }`}
+                          }`}
                       >
                         {r.isWalletFrozen ? '🔓 Release' : '🛑 Freeze'}
                       </button>
@@ -4757,22 +4749,20 @@ function AdminModulePage() {
                     <button
                       type="button"
                       onClick={() => setWalletForm({ ...walletForm, transactionType: 'Credit' })}
-                      className={`py-2 rounded-xl text-xs font-bold border transition ${
-                        walletForm.transactionType === 'Credit'
+                      className={`py-2 rounded-xl text-xs font-bold border transition ${walletForm.transactionType === 'Credit'
                           ? 'bg-emerald-55 text-white border-emerald-55 shadow-sm'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       ➕ Credit Balance
                     </button>
                     <button
                       type="button"
                       onClick={() => setWalletForm({ ...walletForm, transactionType: 'Debit' })}
-                      className={`py-2 rounded-xl text-xs font-bold border transition ${
-                        walletForm.transactionType === 'Debit'
+                      className={`py-2 rounded-xl text-xs font-bold border transition ${walletForm.transactionType === 'Debit'
                           ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
                           : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       ➖ Debit Balance
                     </button>
@@ -4876,13 +4866,13 @@ function AdminModulePage() {
         v.eligibilityTier,
         v.status
       ])
-      const csvContent = "data:text/csv;charset=utf-8," 
+      const csvContent = "data:text/csv;charset=utf-8,"
         + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-      
+
       const encodedUri = encodeURI(csvContent)
       const link = document.createElement("a")
       link.setAttribute("href", encodedUri)
-      link.setAttribute("download", `Rewards_Campaigns_Ledger_${new Date().toISOString().slice(0,10)}.csv`)
+      link.setAttribute("download", `Rewards_Campaigns_Ledger_${new Date().toISOString().slice(0, 10)}.csv`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -5051,13 +5041,12 @@ function AdminModulePage() {
                         {voucher.validFrom && new Date(voucher.validFrom).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - {voucher.validTo && new Date(voucher.validTo).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider text-[9px] ${
-                          voucher.status === 'Active'
+                        <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider text-[9px] ${voucher.status === 'Active'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 animate-pulse'
                             : voucher.status === 'Expired'
-                            ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                            : 'bg-slate-100 text-slate-700 border border-slate-200'
-                        }`}>
+                              ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
+                          }`}>
                           {voucher.status}
                         </span>
                       </td>
@@ -5517,7 +5506,7 @@ function AdminModulePage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
           <h2 className="text-base font-semibold text-slate-900">Security Settings</h2>
           <p className="mt-1 text-sm text-slate-500">Update admin account password.</p>
-          
+
           <form onSubmit={handleUpdateAdminPassword} className="mt-4 max-w-sm">
             <label className="block mb-2 text-sm font-medium text-slate-700">New Password</label>
             <input

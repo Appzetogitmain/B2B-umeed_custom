@@ -83,12 +83,11 @@ function AdminDealManagement() {
                 <td className="p-4 font-bold text-emerald-600">₹{deal.requestedRate}</td>
                 <td className="p-4 font-semibold">{deal.requestedQuantity} Units</td>
                 <td className="p-4">
-                  <span className={`px-2 py-1 text-xs font-bold rounded-md ${
-                    deal.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                    deal.status === 'ACCEPTED' ? 'bg-green-100 text-green-700' :
-                    deal.status === 'COUNTERED' ? 'bg-blue-100 text-blue-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
+                  <span className={`px-2 py-1 text-xs font-bold rounded-md ${deal.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                      deal.status === 'ACCEPTED' ? 'bg-green-100 text-green-700' :
+                        deal.status === 'COUNTERED' ? 'bg-blue-100 text-blue-700' :
+                          'bg-red-100 text-red-700'
+                    }`}>
                     {deal.status}
                   </span>
                 </td>
