@@ -1,4 +1,4 @@
-import { getBackendUrl } from '../utils/api';
+import { getBackendUrl, getImageUrl } from '../utils/api';
 import { useState, useEffect } from 'react';
 
 function AdminDealManagement() {
@@ -73,7 +73,7 @@ function AdminDealManagement() {
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
-                    <img src={deal.productId?.images?.[0]?.startsWith('http') ? deal.productId.images[0] : (deal.productId?.images?.[0] ? `${getBackendUrl()}${deal.productId.images[0]}` : 'https://via.placeholder.com/150')} className="w-10 h-10 rounded-md object-cover" alt="" />
+                    <img src={getImageUrl(deal.productId?.images?.[0]) || 'https://via.placeholder.com/150'} className="w-10 h-10 rounded-md object-cover" alt="" />
                     <div>
                       <p className="font-semibold">{deal.productId?.name}</p>
                       <p className="text-xs text-slate-500">MRP: ₹{deal.productId?.mrp}</p>

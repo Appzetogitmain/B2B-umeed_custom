@@ -1,4 +1,4 @@
-import { getBackendUrl } from '../../utils/api';
+import { getBackendUrl, getImageUrl } from '../../utils/api';
 import { useState, useEffect } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { adminModuleContent } from '../../data/adminModules'
@@ -1618,7 +1618,7 @@ function AdminModulePage() {
                     <td className="px-3 py-3">
                       {cat.image ? (
                         <img 
-                          src={cat.image} 
+                          src={getImageUrl(cat.image)} 
                           alt={cat.categoryName} 
                           className="h-10 w-10 rounded-lg object-cover border border-slate-100"
                         />
@@ -1727,7 +1727,7 @@ function AdminModulePage() {
                     </label>
                     {categoryForm.image && (
                       <img
-                        src={categoryForm.image}
+                        src={getImageUrl(categoryForm.image)}
                         alt="Preview"
                         className="h-10 w-10 rounded-lg object-cover border border-slate-200"
                       />
@@ -1795,7 +1795,7 @@ function AdminModulePage() {
                     <td className="px-3 py-3">
                       {banner.image ? (
                         <img 
-                          src={banner.image} 
+                          src={getImageUrl(banner.image)} 
                           alt={banner.title} 
                           className="h-10 w-20 rounded-lg object-cover border border-slate-100"
                         />
@@ -1917,7 +1917,7 @@ function AdminModulePage() {
                     </label>
                     {bannerForm.image && (
                       <img 
-                        src={bannerForm.image} 
+                        src={getImageUrl(bannerForm.image)} 
                         alt="Preview" 
                         className="h-10 w-20 rounded-lg object-cover border border-slate-100"
                       />
@@ -2421,7 +2421,7 @@ function AdminModulePage() {
             <Field label="Retailer Photo">
               {retailerForm.photo && (
                 <div className="mb-2 relative w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-                  <img src={retailerForm.photo} alt="Retailer Document" className="w-full h-full object-cover" />
+                  <img src={getImageUrl(retailerForm.photo)} alt="Retailer Document" className="w-full h-full object-cover" />
                   {!isReadOnly && (
                     <button
                       type="button"
@@ -2507,7 +2507,7 @@ function AdminModulePage() {
                           prod.images.map((img, idx) => (
                             <img 
                               key={idx}
-                              src={img} 
+                              src={getImageUrl(img)} 
                               alt={prod.name} 
                               className="h-10 w-10 rounded-lg object-cover border border-slate-100 flex-shrink-0"
                             />
@@ -2743,7 +2743,7 @@ function AdminModulePage() {
                     <div className="flex flex-wrap gap-3 mb-4">
                       {productForm.images.map((img, idx) => (
                         <div key={idx} className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm">
-                          <img src={img} alt="Gallery item" className="h-full w-full object-cover" />
+                          <img src={getImageUrl(img)} alt="Gallery item" className="h-full w-full object-cover" />
                           {!isReadOnly && (
                             <button
                               type="button"
@@ -3530,7 +3530,7 @@ function AdminModulePage() {
                           <div className="flex items-center gap-3">
                             {product.images && product.images[0] ? (
                               <img
-                                src={product.images[0]}
+                                src={getImageUrl(product.images[0])}
                                 alt={product.name}
                                 className="h-10 w-10 rounded-lg object-cover border border-slate-100"
                               />

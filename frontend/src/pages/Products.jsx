@@ -1,4 +1,4 @@
-import { getBackendUrl } from '../utils/api';
+import { getBackendUrl, getImageUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { Search, SlidersHorizontal, ShoppingCart } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -40,7 +40,7 @@ function Products() {
               price: p.price,
               originalPrice: p.mrp,
               discount: p.discount ? `${p.discount}% OFF` : '',
-              image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+              image: p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
               stock: p.stock
             })))
           }

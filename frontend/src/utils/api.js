@@ -76,4 +76,17 @@ window.fetch = function(url, options = {}) {
   return originalFetch.call(this, url, options)
 }
 
-export { getBackendUrl, getToken }
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (typeof url !== 'string') return url;
+  
+  if (url.startsWith('http://localhost:5200')) {
+    return url.replace('http://localhost:5200', getBackendUrl());
+  }
+  if (url.startsWith('/')) {
+    return `${getBackendUrl()}${url}`;
+  }
+  return url;
+}
+
+export { getBackendUrl, getToken, getImageUrl }

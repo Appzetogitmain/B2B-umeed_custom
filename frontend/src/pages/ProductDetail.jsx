@@ -1,10 +1,8 @@
-import { getBackendUrl } from '../utils/api';
+import { getBackendUrl, getImageUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Package, ShoppingCart, Plus, Minus, Check } from 'lucide-react'
 import useCart from '../hooks/useCart'
-
-
 
 function ProductDetail() {
   const { id } = useParams()
@@ -39,7 +37,7 @@ function ProductDetail() {
       name: product.name,
       price: product.price,
       originalPrice: product.mrp,
-      image: product.images?.[0] || '',
+      image: getImageUrl(product.images?.[0]) || '',
       category: product.category
     }
     for (let i = 0; i < quantity; i++) {
@@ -74,7 +72,7 @@ function ProductDetail() {
   }
 
   const discount = product.discount || (product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0)
-  const mainImage = product.images?.[0] || ''
+  const mainImage = getImageUrl(product.images?.[0]) || ''
 
   return (
     <div className="pb-32 px-4 pt-4 bg-[#F8FAFC] min-h-screen">
@@ -112,7 +110,7 @@ function ProductDetail() {
           <div className="flex gap-2 p-4 overflow-x-auto">
             {product.images.map((img, idx) => (
               <div key={idx} className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-slate-100">
-                <img src={img} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
+                <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
               </div>
             ))}
           </div>

@@ -1,4 +1,4 @@
-import { getBackendUrl } from '../utils/api';
+import { getBackendUrl, getImageUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Package, Clock, MapPin, CreditCard, Truck } from 'lucide-react'
@@ -123,7 +123,7 @@ function OrderDetail() {
             <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
               <div className="h-14 w-14 bg-white rounded-xl overflow-hidden shrink-0 border border-slate-100">
                 {item.product?.images?.[0] ? (
-                  <img src={item.product.images[0]} alt={item.name} className="h-full w-full object-cover" />
+                  <img src={getImageUrl(item.product.images[0])} alt={item.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="h-full w-full grid place-items-center text-slate-300">
                     <Package size={20} />

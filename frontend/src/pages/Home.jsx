@@ -1,4 +1,4 @@
-import { getBackendUrl } from '../utils/api';
+import { getBackendUrl, getImageUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import {
   Search as SearchIcon,
@@ -138,7 +138,7 @@ function Home() {
               price: p.price,
               originalPrice: p.mrp,
               discount: p.discount ? `${p.discount}% OFF` : '',
-              image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+              image: p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
               stock: p.stock
             })))
           }
@@ -190,7 +190,7 @@ function Home() {
             price: p.price,
             originalPrice: p.mrp,
             discount: p.discount ? `${p.discount}% OFF` : '',
-            image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+            image: p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
             stock: p.stock
           }))
         }
@@ -218,7 +218,7 @@ function Home() {
                   price: p.price,
                   originalPrice: p.mrp,
                   discount: p.discount ? `${p.discount}% OFF` : '',
-                  image: p.images && p.images.length > 0 ? p.images[0] : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
+                  image: p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
                   stock: p.stock
                 }))
               // Merge without duplicates
@@ -369,7 +369,7 @@ function Home() {
               >
                 {banner.image && (
                   <div className="absolute inset-0 z-0">
-                    <img src={banner.image} alt={banner.title} className="w-full h-full object-cover opacity-50" />
+                    <img src={getImageUrl(banner.image)} alt={banner.title} className="w-full h-full object-cover opacity-50" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
                   </div>
                 )}
@@ -432,7 +432,7 @@ function Home() {
                 {cat.isDynamic ? (
                   cat.image ? (
                     <img 
-                      src={cat.image} 
+                      src={getImageUrl(cat.image)} 
                       alt={cat.name} 
                       className="h-full w-full object-cover rounded-2xl p-1"
                     />
@@ -471,7 +471,7 @@ function Home() {
             <div key={product.id} className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-all duration-200 group">
               <div className="relative h-32 sm:h-40 md:h-48 w-full bg-slate-50 rounded-lg overflow-hidden mb-3">
                 <img 
-                  src={product.image} 
+                  src={getImageUrl(product.image)} 
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                 />
@@ -546,7 +546,7 @@ function Home() {
             
             <div className="flex items-center gap-3 mb-4">
               <div className="h-12 w-12 rounded-lg overflow-hidden bg-slate-50 shrink-0">
-                <img src={dealProduct.image} className="w-full h-full object-cover" alt="" />
+                <img src={getImageUrl(dealProduct.image)} className="w-full h-full object-cover" alt="" />
               </div>
               <div>
                 <h3 className="font-bold text-sm leading-tight">{dealProduct.name}</h3>
