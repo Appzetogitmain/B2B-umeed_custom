@@ -249,6 +249,370 @@ function baseInputClass(readOnly) {
     }`
 }
 
+function BulkUploadModal({ onClose, onSuccess, categories }) {
+  const [parsedProducts, setParsedProducts] = useState([]);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileName, setFileName] = useState('');
+
+  const sampleHeaders = ['Name', 'Category', 'Variant Name', 'Price', 'MRP', 'Discount', 'Stock', 'Description'];
+
+  const downloadSample = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + sampleHeaders.join(",") + "\n"
+      + "Aashirvaad Atta,grocery,5 Kg Pack,265,290,9,75,Premium whole wheat flour\n"
+      + "Amul Fresh Milk,Dairy Products,1 Litre Pack,58,62,6,120,Fresh pasteurized milk\n";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "umeed_products_sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const parseCSVText = (text) => {
+    const lines = [];
+    let row = [""];
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      const next = text[i + 1];
+
+      if (inQuotes) {
+        if (c === '"') {
+          if (next === '"') {
+            row[row.length - 1] += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          row[row.length - 1] += c;
+        }
+      } else {
+        if (c === '"') {
+          inQuotes = true;
+        } else if (c === ',') {
+          row.push('');
+        } else if (c === '\r' || c === '\n') {
+          if (c === '\r' && next === '\n') {
+            i++;
+          }
+          lines.push(row);
+          row = [''];
+        } else {
+          row[row.length - 1] += c;
+        }
+      }
+    }
+    if (row.length > 1 || row[0] !== '') {
+      lines.push(row);
+    }
+    return lines;
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    setError('');
+    setSuccessMsg('');
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const rows = parseCSVText(text);
+        if (rows.length < 2) {
+          setError('CSV file is empty or missing data rows.');
+          return;
+        }
+
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+
+        // Simple check if first header matches at least 'name' or 'category' to confirm correct headers
+        if (!headers.includes('name') || !headers.includes('category')) {
+          setError(`Invalid CSV format. Must contain at least 'Name' and 'Category' columns.`);
+          return;
+        }
+
+        const productsList = [];
+        const errorsList = [];
+
+        // Category names list for validation
+        const validCategories = categories.map(c => c.categoryName.toLowerCase());
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (row.length === 1 && row[0] === '') continue; // Skip empty rows
+
+          // Map CSV headers to indices
+          const getVal = (headerName) => {
+            const idx = headers.indexOf(headerName.toLowerCase());
+            return idx !== -1 && row[idx] !== undefined ? row[idx].trim() : '';
+          };
+
+          const name = getVal('name');
+          const category = getVal('category');
+          const variantName = getVal('variant name') || getVal('variant');
+          const priceRaw = getVal('price');
+          const mrpRaw = getVal('mrp');
+          const discountRaw = getVal('discount') || '0';
+          const stockRaw = getVal('stock');
+          const description = getVal('description');
+
+          const rowNum = i + 1;
+          const rowErrors = [];
+
+          if (!name) rowErrors.push('Name is required');
+          if (!category) {
+            rowErrors.push('Category is required');
+          } else if (!validCategories.includes(category.toLowerCase())) {
+            rowErrors.push(`Category "${category}" does not exist in store`);
+          }
+
+          const price = Number(priceRaw);
+          if (priceRaw === '' || isNaN(price) || price < 0) {
+            rowErrors.push('Price must be a positive number');
+          }
+
+          const mrp = Number(mrpRaw);
+          if (mrpRaw === '' || isNaN(mrp) || mrp < 0) {
+            rowErrors.push('MRP must be a positive number');
+          } else if (price > mrp) {
+            rowErrors.push('Price cannot be greater than MRP');
+          }
+
+          const discount = Number(discountRaw);
+          if (isNaN(discount) || discount < 0 || discount > 100) {
+            rowErrors.push('Discount must be between 0 and 100');
+          }
+
+          const stock = Number(stockRaw);
+          if (stockRaw === '' || isNaN(stock) || stock < 0) {
+            rowErrors.push('Stock must be a positive integer');
+          }
+
+          if (rowErrors.length > 0) {
+            errorsList.push(`Row ${rowNum}: ${rowErrors.join(', ')}`);
+          }
+
+          productsList.push({
+            rowNum,
+            name,
+            category,
+            variantName,
+            price: isNaN(price) ? 0 : price,
+            mrp: isNaN(mrp) ? 0 : mrp,
+            discount: isNaN(discount) ? 0 : discount,
+            stock: isNaN(stock) ? 0 : stock,
+            description,
+            isValid: rowErrors.length === 0
+          });
+        }
+
+        setParsedProducts(productsList);
+        setValidationErrors(errorsList);
+      } catch (err) {
+        setError('Error reading file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleConfirmUpload = async () => {
+    if (parsedProducts.length === 0) return;
+    const invalidCount = parsedProducts.filter(p => !p.isValid).length;
+    if (invalidCount > 0) {
+      setError(`Please resolve the ${invalidCount} validation error(s) in your file first.`);
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setError('');
+      setSuccessMsg('');
+
+      const response = await fetch(`${getBackendUrl()}/api/v1/products/bulk`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ products: parsedProducts })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Bulk upload failed');
+      }
+
+      setSuccessMsg(data.message || 'All products uploaded successfully!');
+      setTimeout(() => {
+        onSuccess();
+      }, 1500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto font-sans flex flex-col">
+        <header className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <h3 className="text-lg font-bold text-slate-900">Bulk Product Upload</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+          >
+            ✕
+          </button>
+        </header>
+
+        {error && (
+          <div className="mb-4 rounded-lg bg-rose-50 p-3.5 text-xs font-medium text-rose-600 border border-rose-100">
+            ⚠️ {error}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mb-4 rounded-lg bg-emerald-50 p-3.5 text-xs font-semibold text-emerald-700 border border-emerald-100">
+            ✓ {successMsg}
+          </div>
+        )}
+
+        {/* Info & Sample Download */}
+        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+          <div className="text-xs text-slate-600 space-y-1">
+            <p className="font-semibold text-slate-800">Instructions:</p>
+            <p>1. Download the sample CSV file to match the headers layout.</p>
+            <p>2. Fill in your wholesale inventory items. Category names must exactly match your existing store categories.</p>
+            <p>3. Upload the `.csv` file to preview and validate before bulk import.</p>
+          </div>
+          <button
+            type="button"
+            onClick={downloadSample}
+            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 active:scale-95 transition-all inline-flex items-center gap-1.5 self-start sm:self-center"
+          >
+            📥 Download Sample CSV
+          </button>
+        </div>
+
+        {/* Drag & Drop File Upload */}
+        <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center hover:bg-slate-50 transition-colors mb-4 relative">
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFileUpload}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-2xl mb-1">📊</span>
+            <span className="text-sm font-semibold text-slate-700">
+              {fileName ? fileName : 'Choose CSV File or drag it here'}
+            </span>
+            <span className="text-xs text-slate-400 mt-1">Accepts only standard CSV files</span>
+          </div>
+        </div>
+
+        {/* Validation / Preview Table */}
+        {parsedProducts.length > 0 && (
+          <div className="flex-1 min-h-[250px] mb-4 flex flex-col text-left">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Parsed Products Preview ({parsedProducts.length} items)
+              </span>
+              {validationErrors.length > 0 ? (
+                <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
+                  {validationErrors.length} Errors Found
+                </span>
+              ) : (
+                <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                  All Records Valid
+                </span>
+              )}
+            </div>
+
+            {validationErrors.length > 0 && (
+              <div className="max-h-24 overflow-y-auto mb-3 bg-rose-50/30 border border-rose-100 rounded-lg p-2.5 text-[11px] text-rose-600 font-mono space-y-0.5">
+                {validationErrors.map((err, idx) => (
+                  <div key={idx}>• {err}</div>
+                ))}
+              </div>
+            )}
+
+            <div className="overflow-x-auto border border-slate-200 rounded-xl flex-1 max-h-[300px]">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Row</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Status</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Name</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Category</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Variant</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Price</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">MRP</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Discount</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Stock</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {parsedProducts.map((prod, idx) => (
+                    <tr key={idx} className={prod.isValid ? 'hover:bg-slate-50' : 'bg-rose-50/20 hover:bg-rose-50/30'}>
+                      <td className="px-3 py-2 font-medium text-slate-500">{prod.rowNum}</td>
+                      <td className="px-3 py-2">
+                        {prod.isValid ? (
+                          <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">Valid</span>
+                        ) : (
+                          <span className="text-[10px] bg-rose-50 text-rose-700 border border-rose-100 px-1.5 py-0.5 rounded font-bold">Invalid</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 font-semibold text-slate-800">{prod.name}</td>
+                      <td className="px-3 py-2 text-slate-600">{prod.category}</td>
+                      <td className="px-3 py-2 text-slate-500">{prod.variantName || '—'}</td>
+                      <td className="px-3 py-2 text-slate-800">Rs {prod.price}</td>
+                      <td className="px-3 py-2 text-slate-400">Rs {prod.mrp}</td>
+                      <td className="px-3 py-2 text-emerald-600 font-bold">{prod.discount}%</td>
+                      <td className="px-3 py-2 text-slate-700 font-medium">{prod.stock}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-auto">
+          <button
+            type="button"
+            disabled={isUploading}
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all"
+          >
+            Cancel
+          </button>
+          {parsedProducts.length > 0 && (
+            <button
+              type="button"
+              onClick={handleConfirmUpload}
+              disabled={isUploading || validationErrors.length > 0}
+              className={`rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-all flex items-center gap-2 ${(isUploading || validationErrors.length > 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isUploading ? 'Uploading...' : 'Confirm & Upload'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminModulePage() {
   const { module } = useParams()
   const content = adminModuleContent[module]
@@ -2476,17 +2840,28 @@ function AdminModulePage() {
             <h1 className="text-2xl font-semibold text-slate-800">Product & Pricing Management</h1>
             <p className="mt-1 text-sm text-slate-500">Manage catalog pricing, margins, and promotional strategies for retailers</p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setModalError('');
-              setProductForm(productInitialForm);
-              setSearchParams({ action: 'add' });
-            }}
-            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white active:scale-95 transition-all shadow-[0_4px_12px_rgba(15,23,42,0.15)] hover:bg-slate-800"
-          >
-            + Add Product
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchParams({ action: 'bulk-upload' });
+              }}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 active:scale-95 transition-all hover:bg-slate-50 flex items-center gap-1.5 shadow-sm"
+            >
+              📥 Bulk Upload
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModalError('');
+                setProductForm(productInitialForm);
+                setSearchParams({ action: 'add' });
+              }}
+              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white active:scale-95 transition-all shadow-[0_4px_12px_rgba(15,23,42,0.15)] hover:bg-slate-800"
+            >
+              + Add Product
+            </button>
+          </div>
         </header>
 
         {/* Directory Table */}
@@ -2888,6 +3263,17 @@ function AdminModulePage() {
               </form>
             </div>
           </div>
+        )}
+
+        {isModalOpen && action === 'bulk-upload' && (
+          <BulkUploadModal
+            onClose={() => setSearchParams({})}
+            onSuccess={async () => {
+              await fetchProducts(searchQuery || inventorySearch);
+              setSearchParams({});
+            }}
+            categories={categories}
+          />
         )}
       </div>
     )

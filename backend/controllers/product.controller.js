@@ -256,3 +256,47 @@ export const updateProductStock = async (req, res) => {
     res.status(500).json({ message: 'Error updating product stock' });
   }
 };
+
+// Bulk Create Products
+export const createProductsBulk = async (req, res) => {
+  try {
+    const { products } = req.body;
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ message: 'Please provide a non-empty list of products' });
+    }
+
+    // Validate structure of each product
+    for (const prod of products) {
+      if (!prod.name || !prod.category || prod.price === undefined || prod.mrp === undefined || prod.stock === undefined) {
+        return res.status(400).json({ 
+          message: `Product validation failed. Name, Category, Price, MRP, and Stock are required fields for all items. Missing in: ${prod.name || 'Unnamed'}` 
+        });
+      }
+    }
+
+    // Convert values to numbers and assign defaults for each product
+    const formattedProducts = products.map(prod => ({
+      name: prod.name.trim(),
+      category: prod.category.trim(),
+      variantName: (prod.variantName || '').trim(),
+      price: Number(prod.price),
+      mrp: Number(prod.mrp),
+      discount: Number(prod.discount || 0),
+      stock: Number(prod.stock),
+      description: (prod.description || '').trim(),
+      images: prod.images && Array.isArray(prod.images) ? prod.images : []
+    }));
+
+    // Perform bulk insertion
+    const createdProducts = await Product.insertMany(formattedProducts);
+    res.status(201).json({
+      message: `${createdProducts.length} products uploaded successfully`,
+      products: createdProducts
+    });
+  } catch (error) {
+    console.error('Bulk create products error:', error);
+    res.status(500).json({ message: error.message || 'Error uploading products in bulk' });
+  }
+};
+
