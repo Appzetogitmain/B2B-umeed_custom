@@ -251,19 +251,20 @@ function baseInputClass(readOnly) {
 
 function BulkUploadModal({ onClose, onSuccess, categories }) {
   const [parsedProducts, setParsedProducts] = useState([]);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [validationErrors, setValidationErrors] = useState([]);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState('');
 
-  const sampleHeaders = ['Name', 'Category', 'Variant Name', 'Price', 'MRP', 'Discount', 'Stock', 'Description'];
+  const sampleHeaders = ['Name', 'Category', 'Variant Name', 'Price', 'MRP', 'Discount', 'Stock', 'Description', 'Image'];
 
   const downloadSample = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + sampleHeaders.join(",") + "\n"
-      + "Aashirvaad Atta,grocery,5 Kg Pack,265,290,9,75,Premium whole wheat flour\n"
-      + "Amul Fresh Milk,Dairy Products,1 Litre Pack,58,62,6,120,Fresh pasteurized milk\n";
+      + "Aashirvaad Atta,grocery,5 Kg Pack,265,290,9,75,Premium whole wheat flour,atta.jpg\n"
+      + "Amul Fresh Milk,Dairy Products,1 Litre Pack,58,62,6,120,Fresh pasteurized milk,milk.png\n";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -364,6 +365,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
           const discountRaw = getVal('discount') || '0';
           const stockRaw = getVal('stock');
           const description = getVal('description');
+          const imageName = getVal('image');
 
           const rowNum = i + 1;
           const rowErrors = [];
@@ -411,6 +413,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
             discount: isNaN(discount) ? 0 : discount,
             stock: isNaN(stock) ? 0 : stock,
             description,
+            imageName,
             isValid: rowErrors.length === 0
           });
         }
@@ -422,6 +425,27 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
       }
     };
     reader.readAsText(file);
+  };
+
+  const getMatchedPreview = (imageName) => {
+    if (!imageName) return <span className="text-slate-400 italic">No image filename</span>;
+    const matched = selectedImages.find(f => f.name.toLowerCase() === imageName.toLowerCase());
+    return matched ? (
+      <div className="flex items-center gap-1.5 min-w-[120px]">
+        <img
+          src={URL.createObjectURL(matched)}
+          alt={matched.name}
+          className="h-7 w-7 rounded object-cover border border-slate-200 shrink-0"
+        />
+        <span className="text-[10px] text-emerald-600 font-semibold truncate max-w-[80px]" title={matched.name}>
+          Matched
+        </span>
+      </div>
+    ) : (
+      <span className="text-[10px] text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded font-medium truncate max-w-[150px]" title={`Filename "${imageName}" not in selected images`}>
+        ⚠️ Filename not matched
+      </span>
+    );
   };
 
   const handleConfirmUpload = async () => {
@@ -437,12 +461,53 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
       setError('');
       setSuccessMsg('');
 
+      // Helper function to read file as DataURL (Base64)
+      const fileToPromise = (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      // Map parsed products and read files dynamically
+      const productsWithBase64 = [];
+      for (const prod of parsedProducts) {
+        let base64Images = [];
+        if (prod.imageName) {
+          const matchedFile = selectedImages.find(
+            (f) => f.name.toLowerCase() === prod.imageName.toLowerCase()
+          );
+          if (matchedFile) {
+            try {
+              const base64Str = await fileToPromise(matchedFile);
+              base64Images.push(base64Str);
+            } catch (err) {
+              console.error(`Error reading file ${matchedFile.name}:`, err);
+            }
+          }
+        }
+        
+        productsWithBase64.push({
+          name: prod.name,
+          category: prod.category,
+          variantName: prod.variantName,
+          price: prod.price,
+          mrp: prod.mrp,
+          discount: prod.discount,
+          stock: prod.stock,
+          description: prod.description,
+          images: base64Images
+        });
+      }
+
       const response = await fetch(`${getBackendUrl()}/api/v1/products/bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ products: parsedProducts })
+        body: JSON.stringify({ products: productsWithBase64 })
       });
 
       const data = await response.json();
@@ -463,7 +528,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-4xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto font-sans flex flex-col">
+      <div className="w-full max-w-5xl rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto font-sans flex flex-col">
         <header className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
           <h3 className="text-lg font-bold text-slate-900">Bulk Product Upload</h3>
           <button
@@ -491,9 +556,9 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
         <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
           <div className="text-xs text-slate-600 space-y-1">
             <p className="font-semibold text-slate-800">Instructions:</p>
-            <p>1. Download the sample CSV file to match the headers layout.</p>
-            <p>2. Fill in your wholesale inventory items. Category names must exactly match your existing store categories.</p>
-            <p>3. Upload the `.csv` file to preview and validate before bulk import.</p>
+            <p>1. Download the sample CSV file to match the headers layout. Ensure your column headers include **Image**.</p>
+            <p>2. Fill in the image filenames (e.g. `atta.jpg`) under the **Image** column in the CSV.</p>
+            <p>3. Select the CSV file below, then select/drag the corresponding image files in Step 2.</p>
           </div>
           <button
             type="button"
@@ -504,20 +569,43 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
           </button>
         </div>
 
-        {/* Drag & Drop File Upload */}
-        <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center hover:bg-slate-50 transition-colors mb-4 relative">
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleFileUpload}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-          <div className="flex flex-col items-center justify-center">
-            <span className="text-2xl mb-1">📊</span>
-            <span className="text-sm font-semibold text-slate-700">
-              {fileName ? fileName : 'Choose CSV File or drag it here'}
-            </span>
-            <span className="text-xs text-slate-400 mt-1">Accepts only standard CSV files</span>
+        <div className="grid gap-4 sm:grid-cols-2 mb-4">
+          {/* Step 1: Select CSV */}
+          <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 text-center hover:bg-slate-50 transition-colors relative min-h-[110px] flex items-center justify-center">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileUpload}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <div className="flex flex-col items-center">
+              <span className="text-xl mb-0.5">📄</span>
+              <span className="text-xs font-bold text-slate-700">
+                {fileName ? `CSV: ${fileName}` : 'Step 1: Choose CSV File'}
+              </span>
+              <span className="text-[10px] text-slate-400 mt-0.5">Drag `.csv` here or click</span>
+            </div>
+          </div>
+
+          {/* Step 2: Select Images */}
+          <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 text-center hover:bg-slate-50 transition-colors relative min-h-[110px] flex items-center justify-center">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                setSelectedImages(files);
+              }}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <div className="flex flex-col items-center">
+              <span className="text-xl mb-0.5">📸</span>
+              <span className="text-xs font-bold text-[#00a877]">
+                {selectedImages.length > 0 ? `Images: ${selectedImages.length} files selected` : 'Step 2: Choose Product Images'}
+              </span>
+              <span className="text-[10px] text-slate-400 mt-0.5">Select multiple product image files</span>
+            </div>
           </div>
         </div>
 
@@ -553,6 +641,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
                   <tr>
                     <th className="px-3 py-2 font-semibold text-slate-700">Row</th>
                     <th className="px-3 py-2 font-semibold text-slate-700">Status</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Matched Image</th>
                     <th className="px-3 py-2 font-semibold text-slate-700">Name</th>
                     <th className="px-3 py-2 font-semibold text-slate-700">Category</th>
                     <th className="px-3 py-2 font-semibold text-slate-700">Variant</th>
@@ -573,6 +662,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
                           <span className="text-[10px] bg-rose-50 text-rose-700 border border-rose-100 px-1.5 py-0.5 rounded font-bold">Invalid</span>
                         )}
                       </td>
+                      <td className="px-3 py-2">{getMatchedPreview(prod.imageName)}</td>
                       <td className="px-3 py-2 font-semibold text-slate-800">{prod.name}</td>
                       <td className="px-3 py-2 text-slate-600">{prod.category}</td>
                       <td className="px-3 py-2 text-slate-500">{prod.variantName || '—'}</td>
@@ -2887,8 +2977,8 @@ function AdminModulePage() {
                   <tr key={prod._id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-3 py-3">
                       <div className="flex gap-1 overflow-x-auto max-w-[120px]">
-                        {prod.images && prod.images.length > 0 ? (
-                          prod.images.map((img, idx) => (
+                        {prod.images && prod.images.filter(img => img && img.trim() !== '').length > 0 ? (
+                          prod.images.filter(img => img && img.trim() !== '').map((img, idx) => (
                             <img
                               key={idx}
                               src={getImageUrl(img)}
@@ -2897,9 +2987,11 @@ function AdminModulePage() {
                             />
                           ))
                         ) : (
-                          <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-semibold">
-                            No Img
-                          </div>
+                          <img
+                            src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150"
+                            alt="Placeholder"
+                            className="h-10 w-10 rounded-lg object-cover border border-slate-100 flex-shrink-0"
+                          />
                         )}
                       </div>
                     </td>
@@ -3921,16 +4013,18 @@ function AdminModulePage() {
                       <tr key={product._id} className="hover:bg-slate-50/40 transition">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            {product.images && product.images[0] ? (
+                            {product.images && product.images.filter(img => img && img.trim() !== '').length > 0 ? (
                               <img
-                                src={getImageUrl(product.images[0])}
+                                src={getImageUrl(product.images.filter(img => img && img.trim() !== '')[0])}
                                 alt={product.name}
                                 className="h-10 w-10 rounded-lg object-cover border border-slate-100"
                               />
                             ) : (
-                              <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-semibold">
-                                No Img
-                              </div>
+                              <img
+                                src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150"
+                                alt="Placeholder"
+                                className="h-10 w-10 rounded-lg object-cover border border-slate-100 flex-shrink-0"
+                              />
                             )}
                             <div>
                               <div className="font-semibold text-slate-800">{product.name}</div>
