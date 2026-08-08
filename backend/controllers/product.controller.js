@@ -275,18 +275,39 @@ export const createProductsBulk = async (req, res) => {
       }
     }
 
-    // Convert values to numbers and assign defaults for each product
-    const formattedProducts = products.map(prod => ({
-      name: prod.name.trim(),
-      category: prod.category.trim(),
-      variantName: (prod.variantName || '').trim(),
-      price: Number(prod.price),
-      mrp: Number(prod.mrp),
-      discount: Number(prod.discount || 0),
-      stock: Number(prod.stock),
-      description: (prod.description || '').trim(),
-      images: prod.images && Array.isArray(prod.images) ? prod.images : []
-    }));
+    // Process and save images for each product
+    const formattedProducts = [];
+    for (const prod of products) {
+      let uploadedImages = [];
+      if (prod.images && Array.isArray(prod.images)) {
+        const base64UploadPromises = prod.images.map(async (img) => {
+          if (img && img.startsWith('data:image')) {
+            try {
+              const buffer = getBufferFromBase64(img);
+              return await processAndSaveImage(buffer, 'menu');
+            } catch (err) {
+              console.error('Error processing bulk upload image:', err);
+              return null;
+            }
+          }
+          return img;
+        });
+        const results = await Promise.all(base64UploadPromises);
+        uploadedImages = results.filter(url => url !== null);
+      }
+
+      formattedProducts.push({
+        name: prod.name.trim(),
+        category: prod.category.trim(),
+        variantName: (prod.variantName || '').trim(),
+        price: Number(prod.price),
+        mrp: Number(prod.mrp),
+        discount: Number(prod.discount || 0),
+        stock: Number(prod.stock),
+        description: (prod.description || '').trim(),
+        images: uploadedImages
+      });
+    }
 
     // Perform bulk insertion
     const createdProducts = await Product.insertMany(formattedProducts);
