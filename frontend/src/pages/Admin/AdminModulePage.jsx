@@ -727,9 +727,6 @@ function AdminModulePage() {
   const [categories, setCategories] = useState([])
   const [banners, setBanners] = useState([])
   const [products, setProducts] = useState([])
-  const [productPage, setProductPage] = useState(1)
-  const [totalProductPages, setTotalProductPages] = useState(1)
-  const [totalProductsCount, setTotalProductsCount] = useState(0)
   const [orders, setOrders] = useState([])
 
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -1020,49 +1017,15 @@ function AdminModulePage() {
     }
   }, [partners, action, paramId, isDeliveryModule])
 
-  const [prevSearch, setPrevSearch] = useState('')
-
   useEffect(() => {
     if (isProductPricingModule || isInventoryModule) {
       const activeSearch = searchQuery || inventorySearch
-      let targetPage = productPage
-      if (activeSearch !== prevSearch) {
-        targetPage = 1
-        setProductPage(1)
-        setPrevSearch(activeSearch)
-      }
-      if (isProductPricingModule) {
-        fetchProducts(activeSearch, targetPage)
-      } else {
-        fetchAllProducts(activeSearch)
-      }
+      fetchProducts(activeSearch)
       fetchCategories()
     }
-  }, [isProductPricingModule, isInventoryModule, searchQuery, inventorySearch, productPage])
+  }, [isProductPricingModule, isInventoryModule, searchQuery, inventorySearch])
 
-  const fetchProducts = async (search = '', page = 1) => {
-    try {
-      const limit = 10
-      const url = `${getBackendUrl()}/api/v1/products?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`
-      const response = await fetch(url)
-      if (response.ok) {
-        const data = await response.json()
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-          setProducts(data.products || [])
-          setTotalProductPages(data.totalPages || 1)
-          setTotalProductsCount(data.totalProducts || 0)
-        } else {
-          setProducts(data)
-          setTotalProductPages(1)
-          setTotalProductsCount(data.length)
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching products:', err)
-    }
-  }
-
-  const fetchAllProducts = async (search = '') => {
+  const fetchProducts = async (search = '') => {
     try {
       const url = search ? `${getBackendUrl()}/api/v1/products?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/products`
       const response = await fetch(url)
@@ -1071,7 +1034,7 @@ function AdminModulePage() {
         setProducts(data)
       }
     } catch (err) {
-      console.error('Error fetching all products:', err)
+      console.error('Error fetching products:', err)
     }
   }
 
@@ -1783,7 +1746,7 @@ function AdminModulePage() {
       if (!response.ok) {
         throw new Error(data.message || 'Something went wrong')
       }
-      await fetchProducts(searchQuery || inventorySearch, productPage)
+      await fetchProducts()
       setProductForm(productInitialForm)
       setSearchParams({})
     } catch (err) {
@@ -1803,7 +1766,7 @@ function AdminModulePage() {
         const data = await response.json()
         throw new Error(data.message || 'Failed to delete product')
       }
-      await fetchProducts(searchQuery || inventorySearch, productPage)
+      await fetchProducts()
     } catch (err) {
       console.error(err)
       alert(err.message)
@@ -1830,11 +1793,7 @@ function AdminModulePage() {
         throw new Error(data.message || 'Failed to update stock quantity')
       }
 
-      if (isProductPricingModule) {
-        await fetchProducts(searchQuery || inventorySearch, productPage)
-      } else {
-        await fetchAllProducts(searchQuery || inventorySearch)
-      }
+      await fetchProducts()
       setSelectedInventoryProduct(null)
       setNewStockValue(0)
     } catch (err) {
@@ -3089,77 +3048,6 @@ function AdminModulePage() {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination Controls */}
-          {totalProductPages > 0 && (
-            <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-4 text-sm text-slate-600">
-              <div>
-                Showing <span className="font-semibold text-slate-800">{totalProductsCount === 0 ? 0 : (productPage - 1) * 10 + 1}</span> to{' '}
-                <span className="font-semibold text-slate-800">{Math.min(productPage * 10, totalProductsCount)}</span> of{' '}
-                <span className="font-semibold text-slate-800">{totalProductsCount}</span> products
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  disabled={productPage <= 1}
-                  onClick={() => setProductPage(prev => Math.max(1, prev - 1))}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 active:scale-95 text-xs"
-                >
-                  &larr; Previous
-                </button>
-                
-                {Array.from({ length: totalProductPages }, (_, idx) => idx + 1)
-                  .filter(pNum => {
-                    return (
-                      pNum === 1 ||
-                      pNum === totalProductPages ||
-                      Math.abs(pNum - productPage) <= 1
-                    );
-                  })
-                  .reduce((acc, pNum, index, arr) => {
-                    if (index > 0 && pNum - arr[index - 1] > 1) {
-                      acc.push({ type: 'ellipsis', val: `ellipsis-${pNum}` });
-                    }
-                    acc.push({ type: 'page', val: pNum });
-                    return acc;
-                  }, [])
-                  .map((item) => {
-                    if (item.type === 'ellipsis') {
-                      return (
-                        <span key={item.val} className="px-1 text-slate-400 select-none text-xs">
-                          ...
-                        </span>
-                      );
-                    }
-                    const pNum = item.val;
-                    const isCurrent = pNum === productPage;
-                    return (
-                      <button
-                        key={`page-${pNum}`}
-                        type="button"
-                        onClick={() => setProductPage(pNum)}
-                        className={`rounded-lg px-3 py-1.5 font-semibold text-xs transition duration-150 active:scale-95 ${
-                          isCurrent
-                            ? 'bg-slate-900 text-white shadow-sm'
-                            : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        {pNum}
-                      </button>
-                    );
-                  })}
-
-                <button
-                  type="button"
-                  disabled={productPage >= totalProductPages}
-                  onClick={() => setProductPage(prev => Math.min(totalProductPages, prev + 1))}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 active:scale-95 text-xs"
-                >
-                  Next &rarr;
-                </button>
-              </div>
-            </div>
-          )}
         </section>
 
         {/* Form Modal */}

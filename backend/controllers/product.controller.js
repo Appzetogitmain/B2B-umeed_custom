@@ -11,7 +11,7 @@ const getBufferFromBase64 = (base64Str) => {
 // Get all products
 export const getProducts = async (req, res) => {
   try {
-    const { search, page, limit } = req.query;
+    const { search } = req.query;
     let query = {};
     if (search) {
       query = {
@@ -22,26 +22,6 @@ export const getProducts = async (req, res) => {
         ]
       };
     }
-
-    if (page && limit) {
-      const pageNum = parseInt(page) || 1;
-      const limitNum = parseInt(limit) || 10;
-      const skipNum = (pageNum - 1) * limitNum;
-
-      const totalProducts = await Product.countDocuments(query);
-      const products = await Product.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skipNum)
-        .limit(limitNum);
-
-      return res.json({
-        products,
-        currentPage: pageNum,
-        totalPages: Math.ceil(totalProducts / limitNum),
-        totalProducts
-      });
-    }
-
     const products = await Product.find(query).sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
