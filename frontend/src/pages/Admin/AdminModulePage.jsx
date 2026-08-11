@@ -261,7 +261,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
   const sampleHeaders = ['Name', 'Category', 'Variant Name', 'Price', 'MRP', 'Discount', 'Stock', 'Description', 'Image'];
 
   const downloadSample = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + sampleHeaders.join(",") + "\n"
       + "Aashirvaad Atta,grocery,5 Kg Pack,265,290,9,75,Premium whole wheat flour,atta.jpg\n"
       + "Amul Fresh Milk,Dairy Products,1 Litre Pack,58,62,6,120,Fresh pasteurized milk,milk.png\n";
@@ -488,7 +488,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
             }
           }
         }
-        
+
         productsWithBase64.push({
           name: prod.name,
           category: prod.category,
@@ -727,6 +727,9 @@ function AdminModulePage() {
   const [categories, setCategories] = useState([])
   const [banners, setBanners] = useState([])
   const [products, setProducts] = useState([])
+  const [productPage, setProductPage] = useState(1)
+  const [totalProductPages, setTotalProductPages] = useState(1)
+  const [totalProductsCount, setTotalProductsCount] = useState(0)
   const [orders, setOrders] = useState([])
 
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -1017,15 +1020,49 @@ function AdminModulePage() {
     }
   }, [partners, action, paramId, isDeliveryModule])
 
+  const [prevSearch, setPrevSearch] = useState('')
+
   useEffect(() => {
     if (isProductPricingModule || isInventoryModule) {
       const activeSearch = searchQuery || inventorySearch
-      fetchProducts(activeSearch)
+      let targetPage = productPage
+      if (activeSearch !== prevSearch) {
+        targetPage = 1
+        setProductPage(1)
+        setPrevSearch(activeSearch)
+      }
+      if (isProductPricingModule) {
+        fetchProducts(activeSearch, targetPage)
+      } else {
+        fetchAllProducts(activeSearch)
+      }
       fetchCategories()
     }
-  }, [isProductPricingModule, isInventoryModule, searchQuery, inventorySearch])
+  }, [isProductPricingModule, isInventoryModule, searchQuery, inventorySearch, productPage])
 
-  const fetchProducts = async (search = '') => {
+  const fetchProducts = async (search = '', page = 1) => {
+    try {
+      const limit = 10
+      const url = `${getBackendUrl()}/api/v1/products?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          setProducts(data.products || [])
+          setTotalProductPages(data.totalPages || 1)
+          setTotalProductsCount(data.totalProducts || 0)
+        } else {
+          setProducts(data)
+          setTotalProductPages(1)
+          setTotalProductsCount(data.length)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err)
+    }
+  }
+
+  const fetchAllProducts = async (search = '') => {
     try {
       const url = search ? `${getBackendUrl()}/api/v1/products?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/products`
       const response = await fetch(url)
@@ -1034,7 +1071,7 @@ function AdminModulePage() {
         setProducts(data)
       }
     } catch (err) {
-      console.error('Error fetching products:', err)
+      console.error('Error fetching all products:', err)
     }
   }
 
@@ -1746,7 +1783,7 @@ function AdminModulePage() {
       if (!response.ok) {
         throw new Error(data.message || 'Something went wrong')
       }
-      await fetchProducts()
+      await fetchProducts(searchQuery || inventorySearch, productPage)
       setProductForm(productInitialForm)
       setSearchParams({})
     } catch (err) {
@@ -1766,7 +1803,7 @@ function AdminModulePage() {
         const data = await response.json()
         throw new Error(data.message || 'Failed to delete product')
       }
-      await fetchProducts()
+      await fetchProducts(searchQuery || inventorySearch, productPage)
     } catch (err) {
       console.error(err)
       alert(err.message)
@@ -1793,7 +1830,11 @@ function AdminModulePage() {
         throw new Error(data.message || 'Failed to update stock quantity')
       }
 
-      await fetchProducts()
+      if (isProductPricingModule) {
+        await fetchProducts(searchQuery || inventorySearch, productPage)
+      } else {
+        await fetchAllProducts(searchQuery || inventorySearch)
+      }
       setSelectedInventoryProduct(null)
       setNewStockValue(0)
     } catch (err) {
@@ -2467,8 +2508,8 @@ function AdminModulePage() {
                     </td>
                     <td className="px-3 py-3">
                       <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${retailer.registeredBy === 'admin'
-                          ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                          : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                        ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                        : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                         }`}>
                         {retailer.registeredBy === 'admin' ? 'Admin' : 'Retailer App'}
                       </span>
@@ -3003,10 +3044,10 @@ function AdminModulePage() {
                     <td className="px-3 py-3 text-emerald-600 font-bold">{prod.discount}% Off</td>
                     <td className="px-3 py-3">
                       <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold border ${prod.stock <= 0
-                          ? 'bg-rose-50 text-rose-700 border-rose-100'
-                          : prod.stock < 10
-                            ? 'bg-amber-50 text-amber-700 border-amber-100'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                        ? 'bg-rose-50 text-rose-700 border-rose-100'
+                        : prod.stock < 10
+                          ? 'bg-amber-50 text-amber-700 border-amber-100'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-100'
                         }`}>
                         {prod.stock <= 0 ? 'Out of Stock' : prod.stock < 10 ? `Low Stock (${prod.stock})` : `${prod.stock} units`}
                       </span>
@@ -3048,6 +3089,77 @@ function AdminModulePage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalProductPages > 0 && (
+            <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-4 text-sm text-slate-600">
+              <div>
+                Showing <span className="font-semibold text-slate-800">{totalProductsCount === 0 ? 0 : (productPage - 1) * 10 + 1}</span> to{' '}
+                <span className="font-semibold text-slate-800">{Math.min(productPage * 10, totalProductsCount)}</span> of{' '}
+                <span className="font-semibold text-slate-800">{totalProductsCount}</span> products
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={productPage <= 1}
+                  onClick={() => setProductPage(prev => Math.max(1, prev - 1))}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 active:scale-95 text-xs"
+                >
+                  &larr; Previous
+                </button>
+                
+                {Array.from({ length: totalProductPages }, (_, idx) => idx + 1)
+                  .filter(pNum => {
+                    return (
+                      pNum === 1 ||
+                      pNum === totalProductPages ||
+                      Math.abs(pNum - productPage) <= 1
+                    );
+                  })
+                  .reduce((acc, pNum, index, arr) => {
+                    if (index > 0 && pNum - arr[index - 1] > 1) {
+                      acc.push({ type: 'ellipsis', val: `ellipsis-${pNum}` });
+                    }
+                    acc.push({ type: 'page', val: pNum });
+                    return acc;
+                  }, [])
+                  .map((item) => {
+                    if (item.type === 'ellipsis') {
+                      return (
+                        <span key={item.val} className="px-1 text-slate-400 select-none text-xs">
+                          ...
+                        </span>
+                      );
+                    }
+                    const pNum = item.val;
+                    const isCurrent = pNum === productPage;
+                    return (
+                      <button
+                        key={`page-${pNum}`}
+                        type="button"
+                        onClick={() => setProductPage(pNum)}
+                        className={`rounded-lg px-3 py-1.5 font-semibold text-xs transition duration-150 active:scale-95 ${
+                          isCurrent
+                            ? 'bg-slate-900 text-white shadow-sm'
+                            : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+
+                <button
+                  type="button"
+                  disabled={productPage >= totalProductPages}
+                  onClick={() => setProductPage(prev => Math.min(totalProductPages, prev + 1))}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 active:scale-95 text-xs"
+                >
+                  Next &rarr;
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Form Modal */}
@@ -3727,8 +3839,8 @@ function AdminModulePage() {
                                 disabled={selectedOrder.status === 'Rejected'}
                                 onClick={() => handleOrderStatusUpdate(selectedOrder._id, st)}
                                 className={`px-2.5 py-1 text-xs font-semibold rounded-full border transition-all ${isCurrent
-                                    ? 'bg-[#00a877] text-white border-[#00a877] shadow-sm'
-                                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                  ? 'bg-[#00a877] text-white border-[#00a877] shadow-sm'
+                                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                                   }`}
                               >
                                 {st}
@@ -4395,8 +4507,8 @@ function AdminModulePage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider text-[10px] ${policy.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                            : 'bg-rose-50 text-rose-700 border border-rose-100'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          : 'bg-rose-50 text-rose-700 border border-rose-100'
                           }`}>
                           {policy.status}
                         </span>
@@ -4871,10 +4983,10 @@ function AdminModulePage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border ${record.paymentMethod === 'Online'
-                            ? 'bg-blue-50 text-blue-700 border-blue-100'
-                            : record.paymentMethod === 'Wallet'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                              : 'bg-amber-50 text-amber-700 border-amber-100'
+                          ? 'bg-blue-50 text-blue-700 border-blue-100'
+                          : record.paymentMethod === 'Wallet'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border-amber-100'
                           }`}>
                           {record.paymentMethod === 'Online' && '🌐 Online'}
                           {record.paymentMethod === 'Wallet' && '💳 Wallet'}
@@ -4883,10 +4995,10 @@ function AdminModulePage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border ${record.paymentStatus === 'Paid'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                            : record.paymentStatus === 'Pending'
-                              ? 'bg-amber-50 text-amber-700 border-amber-100'
-                              : 'bg-red-50 text-red-700 border-red-100'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          : record.paymentStatus === 'Pending'
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
+                            : 'bg-red-50 text-red-700 border-red-100'
                           }`}>
                           {record.paymentStatus === 'Paid' && '❇️ Paid'}
                           {record.paymentStatus === 'Pending' && '🕒 Pending'}
@@ -5107,8 +5219,8 @@ function AdminModulePage() {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className={`inline-block rounded-full px-2.5 py-1 text-[10px] font-bold ${txn.transactionType === 'Credit'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200'
                               }`}>
                               {txn.transactionType === 'Credit' ? '➕ Credit' : '➖ Debit'}
                             </span>
@@ -5171,8 +5283,8 @@ function AdminModulePage() {
                         type="button"
                         onClick={() => handleWalletFreezeToggle(r._id)}
                         className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition active:scale-95 border ${r.isWalletFrozen
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
                           }`}
                       >
                         {r.isWalletFrozen ? '🔓 Release' : '🛑 Freeze'}
@@ -5238,8 +5350,8 @@ function AdminModulePage() {
                       type="button"
                       onClick={() => setWalletForm({ ...walletForm, transactionType: 'Credit' })}
                       className={`py-2 rounded-xl text-xs font-bold border transition ${walletForm.transactionType === 'Credit'
-                          ? 'bg-emerald-55 text-white border-emerald-55 shadow-sm'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-emerald-55 text-white border-emerald-55 shadow-sm'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                         }`}
                     >
                       ➕ Credit Balance
@@ -5248,8 +5360,8 @@ function AdminModulePage() {
                       type="button"
                       onClick={() => setWalletForm({ ...walletForm, transactionType: 'Debit' })}
                       className={`py-2 rounded-xl text-xs font-bold border transition ${walletForm.transactionType === 'Debit'
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
                         }`}
                     >
                       ➖ Debit Balance
@@ -5530,10 +5642,10 @@ function AdminModulePage() {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 font-bold uppercase tracking-wider text-[9px] ${voucher.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 animate-pulse'
-                            : voucher.status === 'Expired'
-                              ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                              : 'bg-slate-100 text-slate-700 border border-slate-200'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 animate-pulse'
+                          : voucher.status === 'Expired'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-100'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}>
                           {voucher.status}
                         </span>
