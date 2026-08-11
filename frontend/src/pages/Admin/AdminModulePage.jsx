@@ -727,6 +727,9 @@ function AdminModulePage() {
   const [categories, setCategories] = useState([])
   const [banners, setBanners] = useState([])
   const [products, setProducts] = useState([])
+  const [productPage, setProductPage] = useState(1)
+  const [productTotalPages, setProductTotalPages] = useState(1)
+  const [productTotal, setProductTotal] = useState(0)
   const [orders, setOrders] = useState([])
 
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -1020,18 +1023,28 @@ function AdminModulePage() {
   useEffect(() => {
     if (isProductPricingModule || isInventoryModule) {
       const activeSearch = searchQuery || inventorySearch
-      fetchProducts(activeSearch)
+      fetchProducts(activeSearch, 1)
       fetchCategories()
     }
   }, [isProductPricingModule, isInventoryModule, searchQuery, inventorySearch])
 
-  const fetchProducts = async (search = '') => {
+  const fetchProducts = async (search = searchQuery || inventorySearch, page = productPage) => {
     try {
-      const url = search ? `${getBackendUrl()}/api/v1/products?search=${encodeURIComponent(search)}` : `${getBackendUrl()}/api/v1/products`
+      const url = `${getBackendUrl()}/api/v1/products?page=${page}&limit=10${search ? `&search=${encodeURIComponent(search)}` : ''}`
       const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
-        setProducts(data)
+        if (data && data.products && Array.isArray(data.products)) {
+          setProducts(data.products)
+          setProductTotalPages(data.totalPages || 1)
+          setProductTotal(data.total || 0)
+          setProductPage(data.page || 1)
+        } else if (Array.isArray(data)) {
+          setProducts(data)
+          setProductTotalPages(1)
+          setProductTotal(data.length)
+          setProductPage(1)
+        }
       }
     } catch (err) {
       console.error('Error fetching products:', err)
@@ -3048,6 +3061,50 @@ function AdminModulePage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination Controls */}
+          {productTotalPages > 1 && (
+            <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm text-slate-500">
+              <div>
+                Showing <span className="font-semibold text-slate-800">{productTotal === 0 ? 0 : (productPage - 1) * 10 + 1}</span> to{' '}
+                <span className="font-semibold text-slate-800">
+                  {Math.min(productPage * 10, productTotal)}
+                </span>{' '}
+                of <span className="font-semibold text-slate-800">{productTotal}</span> products
+              </div>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  disabled={productPage === 1}
+                  onClick={() => fetchProducts(searchQuery || inventorySearch, productPage - 1)}
+                  className="rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-sm"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: productTotalPages }, (_, i) => i + 1).map((pg) => (
+                  <button
+                    key={pg}
+                    type="button"
+                    onClick={() => fetchProducts(searchQuery || inventorySearch, pg)}
+                    className={`rounded-xl px-3 py-1.5 font-semibold transition-all active:scale-95 ${
+                      productPage === pg
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={productPage === productTotalPages}
+                  onClick={() => fetchProducts(searchQuery || inventorySearch, productPage + 1)}
+                  className="rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 font-semibold text-slate-700 hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Form Modal */}
