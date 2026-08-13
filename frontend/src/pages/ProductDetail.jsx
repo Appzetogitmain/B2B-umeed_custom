@@ -76,7 +76,7 @@ function ProductDetail() {
 
   return (
     <div className="pb-32 px-4 pt-4 bg-[#F8FAFC] min-h-screen">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* HEADER */}
         <header className="flex items-center gap-4 mb-6">
           <button
@@ -91,105 +91,115 @@ function ProductDetail() {
           </div>
         </header>
 
-        {/* PRODUCT IMAGE */}
-        <section className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 mb-6">
-          <div className="w-full flex items-center justify-center relative bg-slate-50 min-h-[250px] max-h-[350px]">
-            {mainImage ? (
-              <img src={mainImage} alt={product.name} className="max-h-64 max-w-full object-contain p-4 block mx-auto" />
-            ) : (
-              <Package size={48} className="text-slate-200" />
-            )}
-            {discount > 0 && (
-              <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] font-black uppercase tracking-wider">
-                {discount}% OFF
+        {/* RESPONSIVE LAYOUT GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          
+          {/* LEFT COLUMN: PRODUCT IMAGES */}
+          <div className="space-y-4">
+            <section className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50">
+              <div className="w-full flex items-center justify-center relative bg-slate-50 min-h-[300px] md:min-h-[450px]">
+                {mainImage ? (
+                  <img src={mainImage} alt={product.name} className="max-h-[280px] md:max-h-[420px] max-w-full object-contain p-4 block mx-auto" />
+                ) : (
+                  <Package size={48} className="text-slate-200" />
+                )}
+                {discount > 0 && (
+                  <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] font-black uppercase tracking-wider">
+                    {discount}% OFF
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Multiple images */}
-          {product.images && product.images.length > 1 && (
-            <div className="flex gap-2 p-4 overflow-x-auto">
-              {product.images.map((img, idx) => (
-                <div key={idx} className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-slate-100">
-                  <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
+              {/* Multiple images */}
+              {product.images && product.images.length > 1 && (
+                <div className="flex gap-2 p-4 overflow-x-auto">
+                  {product.images.map((img, idx) => (
+                    <div key={idx} className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-slate-100">
+                      <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* PRODUCT INFO */}
-        <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 mb-6">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{product.category}</p>
-          <h2 className="text-2xl font-black text-[#0F172A] tracking-tight mb-3">{product.name}</h2>
-
-          {product.variantName && (
-            <p className="text-xs text-slate-500 font-medium mb-3">Variant: {product.variantName}</p>
-          )}
-
-          <div className="flex items-baseline gap-3 mb-4">
-            <span className="text-3xl font-black text-black">₹{product.price.toLocaleString('en-IN')}</span>
-            {product.mrp > product.price && (
-              <span className="text-lg text-slate-400 line-through font-medium">₹{product.mrp.toLocaleString('en-IN')}</span>
-            )}
+              )}
+            </section>
           </div>
 
-          {product.description && (
-            <p className="text-sm text-slate-500 leading-relaxed">{product.description}</p>
-          )}
+          {/* RIGHT COLUMN: INFO & ACTIONS */}
+          <div className="space-y-6">
+            {/* PRODUCT INFO */}
+            <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{product.category}</p>
+              <h2 className="text-2xl font-black text-[#0F172A] tracking-tight mb-3 md:text-3xl">{product.name}</h2>
 
-          <div className="flex items-center gap-2 mt-4">
-            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-              }`}>
-              {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
-            </span>
-          </div>
-        </section>
+              {product.variantName && (
+                <p className="text-sm text-slate-500 font-medium mb-3">Variant: {product.variantName}</p>
+              )}
 
-      {/* QUANTITY & ADD TO CART */}
-      <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50">
-        <div className="flex items-center justify-between mb-5">
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Quantity</span>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              className="h-10 w-10 grid place-items-center bg-slate-100 rounded-xl active:scale-95 transition-all"
-            >
-              <Minus size={16} />
-            </button>
-            <span className="text-lg font-black text-[#0F172A] w-8 text-center">{quantity}</span>
-            <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="h-10 w-10 grid place-items-center bg-slate-100 rounded-xl active:scale-95 transition-all"
-            >
-              <Plus size={16} />
-            </button>
+              <div className="flex items-baseline gap-3 mb-4">
+                <span className="text-3xl font-black text-black md:text-4xl">₹{product.price.toLocaleString('en-IN')}</span>
+                {product.mrp > product.price && (
+                  <span className="text-lg text-slate-400 line-through font-medium md:text-xl">₹{product.mrp.toLocaleString('en-IN')}</span>
+                )}
+              </div>
+
+              {product.description && (
+                <p className="text-sm text-slate-500 leading-relaxed md:text-base">{product.description}</p>
+              )}
+
+              <div className="flex items-center gap-2 mt-4">
+                <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                  }`}>
+                  {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
+                </span>
+              </div>
+            </section>
+
+            {/* QUANTITY & ADD TO CART */}
+            <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50">
+              <div className="flex items-center justify-between mb-5">
+                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Quantity</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="h-10 w-10 grid place-items-center bg-slate-100 rounded-xl active:scale-95 transition-all"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="text-lg font-black text-[#0F172A] w-8 text-center">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="h-10 w-10 grid place-items-center bg-slate-100 rounded-xl active:scale-95 transition-all"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleAddToCart}
+                disabled={product.stock <= 0}
+                className={`w-full h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl ${added
+                  ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+                  : product.stock > 0
+                    ? 'bg-black text-white shadow-black/10'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                  }`}
+              >
+                {added ? (
+                  <>
+                    <Check size={18} />
+                    Added to Cart
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={18} />
+                    {product.stock > 0 ? `Add ${quantity} to Cart — ₹${(product.price * quantity).toLocaleString('en-IN')}` : 'Out of Stock'}
+                  </>
+                )}
+              </button>
+            </section>
           </div>
+          
         </div>
-
-        <button
-          onClick={handleAddToCart}
-          disabled={product.stock <= 0}
-          className={`w-full h-14 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] transition-all shadow-xl ${added
-            ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-            : product.stock > 0
-              ? 'bg-black text-white shadow-black/10'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-            }`}
-        >
-          {added ? (
-            <>
-              <Check size={18} />
-              Added to Cart
-            </>
-          ) : (
-            <>
-              <ShoppingCart size={18} />
-              {product.stock > 0 ? `Add ${quantity} to Cart — ₹${(product.price * quantity).toLocaleString('en-IN')}` : 'Out of Stock'}
-            </>
-          )}
-        </button>
-      </section>
       </div>
     </div>
   )
