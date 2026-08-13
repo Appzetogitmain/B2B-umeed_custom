@@ -43,7 +43,20 @@ export const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(query).sort({ createdAt: -1 });
-    res.json(products);
+    
+    // Add dynamic carton details based on database values
+    const productsWithCartonInfo = products.map(p => {
+      const pObj = p.toObject();
+      const cSize = pObj.cartonSize || 1;
+      const stockVal = pObj.stock || 0;
+      
+      pObj.is_carton_available = cSize > 1 && stockVal > 0 && (stockVal % cSize === 0);
+      pObj.carton_count = pObj.is_carton_available ? Math.floor(stockVal / cSize) : 0;
+      
+      return pObj;
+    });
+
+    res.json(productsWithCartonInfo);
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ message: 'Error fetching products' });
@@ -54,11 +67,20 @@ export const getProducts = async (req, res) => {
 export const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
+    const { quantity } = req.query; // Retailer app can query with quantity to check carton options
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    res.json(product);
+    
+    const pObj = product.toObject();
+    const cSize = pObj.cartonSize || 1;
+    const checkQty = quantity !== undefined ? Number(quantity) : pObj.stock;
+    
+    pObj.is_carton_available = cSize > 1 && checkQty > 0 && (checkQty % cSize === 0);
+    pObj.carton_count = pObj.is_carton_available ? Math.floor(checkQty / cSize) : 0;
+
+    res.json(pObj);
   } catch (error) {
     console.error('Get product by ID error:', error);
     res.status(500).json({ message: 'Error fetching product' });
@@ -68,7 +90,7 @@ export const getProductById = async (req, res) => {
 // Create Product
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description } = req.body;
+    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description, packetSize, cartonSize } = req.body;
 
     if (!name || !category || price === undefined || mrp === undefined || stock === undefined) {
       return res.status(400).json({ message: 'Please provide all required fields' });
@@ -131,6 +153,8 @@ export const createProduct = async (req, res) => {
       mrp: Number(mrp),
       discount: Number(discount || 0),
       stock: Number(stock),
+      packetSize: packetSize !== undefined ? Number(packetSize) : 1,
+      cartonSize: cartonSize !== undefined ? Number(cartonSize) : 1,
       description: description || '',
     });
 
@@ -145,7 +169,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description } = req.body;
+    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description, packetSize, cartonSize } = req.body;
 
     const product = await Product.findById(id);
     if (!product) {
@@ -219,6 +243,8 @@ export const updateProduct = async (req, res) => {
     product.mrp = mrp !== undefined ? Number(mrp) : product.mrp;
     product.discount = discount !== undefined ? Number(discount) : product.discount;
     product.stock = stock !== undefined ? Number(stock) : product.stock;
+    product.packetSize = packetSize !== undefined ? Number(packetSize) : product.packetSize;
+    product.cartonSize = cartonSize !== undefined ? Number(cartonSize) : product.cartonSize;
     product.description = description !== undefined ? description : product.description;
 
     const updatedProduct = await product.save();
@@ -324,6 +350,8 @@ export const createProductsBulk = async (req, res) => {
         mrp: Number(prod.mrp),
         discount: Number(prod.discount || 0),
         stock: Number(prod.stock),
+        packetSize: prod.packetSize !== undefined ? Number(prod.packetSize) : 1,
+        cartonSize: prod.cartonSize !== undefined ? Number(prod.cartonSize) : 1,
         description: (prod.description || '').trim(),
         images: uploadedImages
       });

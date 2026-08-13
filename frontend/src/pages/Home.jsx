@@ -469,59 +469,61 @@ function Home() {
             </div>
           ) : filteredProducts.length > 0 ? filteredProducts.map((product) => (
             <div key={product.id} className="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-all duration-200 group">
-              <div className="relative h-32 sm:h-40 md:h-48 w-full bg-slate-50 rounded-lg overflow-hidden mb-3">
-                <img 
-                  src={getImageUrl(product.image)} 
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-white text-[9px] font-black uppercase tracking-tighter">
-                  {product.discount}
+              <Link to={`/retailer/product/${product.id}`} className="block flex-1 flex flex-col">
+                <div className="relative h-32 sm:h-40 md:h-48 w-full bg-slate-50 rounded-lg overflow-hidden mb-3">
+                  <img 
+                    src={getImageUrl(product.image)} 
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-md rounded-md text-white text-[9px] font-black uppercase tracking-tighter">
+                    {product.discount}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col flex-1 px-1">
-                <h4 className="text-xs font-bold text-[#0F172A] mb-1 line-clamp-2 leading-tight h-8">
-                  {product.name}
-                </h4>
+                <div className="flex flex-col flex-1 px-1">
+                  <h4 className="text-xs font-bold text-[#0F172A] mb-1 line-clamp-2 leading-tight h-8">
+                    {product.name}
+                  </h4>
 
-                {product.variantName && (
-                  <span className="text-[10px] font-semibold text-slate-600 mb-1 block">
-                    {product.variantName}
-                  </span>
-                )}
-                
-                {product.description && (
-                  <p className="text-[9px] text-slate-500 mb-2 line-clamp-2 leading-tight">
-                    {product.description}
-                  </p>
-                )}
-                
-                <div className="mt-auto pt-1 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-black block">₹{product.price}</span>
-                    <span className="text-[9px] text-slate-400 line-through">₹{product.originalPrice}</span>
-                  </div>
+                  {product.variantName && (
+                    <span className="text-[10px] font-semibold text-slate-600 mb-1 block">
+                      {product.variantName}
+                    </span>
+                  )}
                   
-                  <div className="flex items-center gap-1">
-                    <button 
-                      onClick={() => openDealModal(product)}
-                      className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
-                      title="Request Deal (Bulk)"
-                    >
-                      <Handshake size={14} />
-                    </button>
-                    <button 
-                      onClick={() => handleAdd(product)}
-                      className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all active:scale-90 ${
-                        addedId === product.id 
-                        ? 'bg-slate-100 text-black border border-slate-200' 
-                        : 'bg-black text-white'
-                      }`}
-                    >
-                      {addedId === product.id ? 'Added' : 'Add'}
-                    </button>
-                  </div>
+                  {product.description && (
+                    <p className="text-[9px] text-slate-500 mb-2 line-clamp-2 leading-tight">
+                      {product.description}
+                    </p>
+                  )}
+                </div>
+              </Link>
+
+              <div className="mt-auto pt-1 flex items-center justify-between px-1">
+                <div>
+                  <span className="text-xs font-bold text-black block">₹{product.price}</span>
+                  <span className="text-[9px] text-slate-400 line-through">₹{product.originalPrice}</span>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); openDealModal(product); }}
+                    className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
+                    title="Request Deal (Bulk)"
+                  >
+                    <Handshake size={14} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(product); }}
+                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all active:scale-90 ${
+                      addedId === product.id 
+                      ? 'bg-slate-100 text-black border border-slate-200' 
+                      : 'bg-black text-white'
+                    }`}
+                  >
+                    {addedId === product.id ? 'Added' : 'Add'}
+                  </button>
                 </div>
               </div>
             </div>

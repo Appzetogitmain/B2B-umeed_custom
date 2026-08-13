@@ -37,6 +37,14 @@ const productSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  packetSize: {
+    type: Number,
+    default: 1
+  },
+  cartonSize: {
+    type: Number,
+    default: 1
+  },
   description: {
     type: String,
     default: '',

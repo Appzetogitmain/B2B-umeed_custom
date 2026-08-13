@@ -151,6 +151,8 @@ const productInitialForm = {
   mrp: '',
   discount: '',
   stock: '',
+  packetSize: '1',
+  cartonSize: '1',
   description: '',
 }
 
@@ -258,13 +260,13 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState('');
 
-  const sampleHeaders = ['Name', 'Category', 'Variant Name', 'Price', 'MRP', 'Discount', 'Stock', 'Description', 'Image'];
+  const sampleHeaders = ['Name', 'Category', 'Variant Name', 'Price', 'MRP', 'Discount', 'Stock', 'Packet Size', 'Carton Size', 'Description', 'Image'];
 
   const downloadSample = () => {
     const csvContent = "data:text/csv;charset=utf-8,"
       + sampleHeaders.join(",") + "\n"
-      + "Aashirvaad Atta,grocery,5 Kg Pack,265,290,9,75,Premium whole wheat flour,atta.jpg\n"
-      + "Amul Fresh Milk,Dairy Products,1 Litre Pack,58,62,6,120,Fresh pasteurized milk,milk.png\n";
+      + "Aashirvaad Atta,grocery,5 Kg Pack,265,290,9,75,1,12,Premium whole wheat flour,atta.jpg\n"
+      + "Amul Fresh Milk,Dairy Products,1 Litre Pack,58,62,6,120,1,24,Fresh pasteurized milk,milk.png\n";
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -364,6 +366,8 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
           const mrpRaw = getVal('mrp');
           const discountRaw = getVal('discount') || '0';
           const stockRaw = getVal('stock');
+          const packetSizeRaw = getVal('packet size') || getVal('packet_size') || '1';
+          const cartonSizeRaw = getVal('carton size') || getVal('carton_size') || '1';
           const description = getVal('description');
           const imageName = getVal('image');
 
@@ -399,6 +403,16 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
             rowErrors.push('Stock must be a positive integer');
           }
 
+          const packetSize = Number(packetSizeRaw);
+          if (isNaN(packetSize) || packetSize < 1) {
+            rowErrors.push('Packet size must be at least 1');
+          }
+
+          const cartonSize = Number(cartonSizeRaw);
+          if (isNaN(cartonSize) || cartonSize < 1) {
+            rowErrors.push('Carton size must be at least 1');
+          }
+
           if (rowErrors.length > 0) {
             errorsList.push(`Row ${rowNum}: ${rowErrors.join(', ')}`);
           }
@@ -412,6 +426,8 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
             mrp: isNaN(mrp) ? 0 : mrp,
             discount: isNaN(discount) ? 0 : discount,
             stock: isNaN(stock) ? 0 : stock,
+            packetSize: isNaN(packetSize) ? 1 : packetSize,
+            cartonSize: isNaN(cartonSize) ? 1 : cartonSize,
             description,
             imageName,
             isValid: rowErrors.length === 0
@@ -497,6 +513,8 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
           mrp: prod.mrp,
           discount: prod.discount,
           stock: prod.stock,
+          packetSize: prod.packetSize,
+          cartonSize: prod.cartonSize,
           description: prod.description,
           images: base64Images
         });
@@ -649,6 +667,8 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
                     <th className="px-3 py-2 font-semibold text-slate-700">MRP</th>
                     <th className="px-3 py-2 font-semibold text-slate-700">Discount</th>
                     <th className="px-3 py-2 font-semibold text-slate-700">Stock</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Packet</th>
+                    <th className="px-3 py-2 font-semibold text-slate-700">Carton</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -670,6 +690,8 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
                       <td className="px-3 py-2 text-slate-400">Rs {prod.mrp}</td>
                       <td className="px-3 py-2 text-emerald-600 font-bold">{prod.discount}%</td>
                       <td className="px-3 py-2 text-slate-700 font-medium">{prod.stock}</td>
+                      <td className="px-3 py-2 text-slate-700">{prod.packetSize}</td>
+                      <td className="px-3 py-2 text-slate-700">{prod.cartonSize}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1220,6 +1242,8 @@ function AdminModulePage() {
           mrp: row.mrp || '',
           discount: row.discount || '',
           stock: row.stock || '',
+          packetSize: row.packetSize || '1',
+          cartonSize: row.cartonSize || '1',
           description: row.description || '',
         })
       }
@@ -3015,14 +3039,26 @@ function AdminModulePage() {
                     <td className="px-3 py-3 text-slate-400 line-through">Rs {prod.mrp}</td>
                     <td className="px-3 py-3 text-emerald-600 font-bold">{prod.discount}% Off</td>
                     <td className="px-3 py-3">
-                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold border ${prod.stock <= 0
-                        ? 'bg-rose-50 text-rose-700 border-rose-100'
-                        : prod.stock < 10
-                          ? 'bg-amber-50 text-amber-700 border-amber-100'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        }`}>
-                        {prod.stock <= 0 ? 'Out of Stock' : prod.stock < 10 ? `Low Stock (${prod.stock})` : `${prod.stock} units`}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold border text-center ${prod.stock <= 0
+                          ? 'bg-rose-50 text-rose-700 border-rose-100'
+                          : prod.stock < 10
+                            ? 'bg-amber-50 text-amber-700 border-amber-100'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          }`}>
+                          {prod.stock <= 0 ? 'Out of Stock' : prod.stock < 10 ? `Low Stock (${prod.stock})` : `${prod.stock} units`}
+                        </span>
+                        {prod.cartonSize > 1 && (
+                          <div className="text-[10px] text-slate-500 mt-0.5">
+                            Pack: {prod.packetSize || 1} | Ctn: {prod.cartonSize || 1}
+                            {prod.is_carton_available && (
+                              <span className="block font-bold text-slate-700 text-[9px] uppercase tracking-wider text-emerald-600">
+                                ({prod.carton_count} Cartons Available)
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex gap-2">
@@ -3085,11 +3121,10 @@ function AdminModulePage() {
                     key={pg}
                     type="button"
                     onClick={() => fetchProducts(searchQuery || inventorySearch, pg)}
-                    className={`rounded-xl px-3 py-1.5 font-semibold transition-all active:scale-95 ${
-                      productPage === pg
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm'
-                    }`}
+                    className={`rounded-xl px-3 py-1.5 font-semibold transition-all active:scale-95 ${productPage === pg
+                      ? 'bg-slate-900 text-white shadow-sm'
+                      : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-sm'
+                      }`}
                   >
                     {pg}
                   </button>
@@ -3197,6 +3232,36 @@ function AdminModulePage() {
                       value={productForm.stock}
                       onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                       placeholder="Available stock"
+                      className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none ${isReadOnly ? 'cursor-default bg-slate-100 text-slate-500' : ''}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Packet Size (pieces per packet)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      readOnly={isReadOnly}
+                      value={productForm.packetSize}
+                      onChange={(e) => setProductForm({ ...productForm, packetSize: e.target.value })}
+                      placeholder="e.g. 1"
+                      className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none ${isReadOnly ? 'cursor-default bg-slate-100 text-slate-500' : ''}`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Carton Size (pieces per carton)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      readOnly={isReadOnly}
+                      value={productForm.cartonSize}
+                      onChange={(e) => setProductForm({ ...productForm, cartonSize: e.target.value })}
+                      placeholder="e.g. 12"
                       className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none ${isReadOnly ? 'cursor-default bg-slate-100 text-slate-500' : ''}`}
                     />
                   </div>
