@@ -94,7 +94,7 @@ function ProductDetail() {
       <section className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 mb-6">
         <div className="h-64 w-full bg-slate-50 grid place-items-center relative">
           {mainImage ? (
-            <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
+            <img src={mainImage} alt={product.name} className="h-full w-full object-contain p-4" />
           ) : (
             <Package size={48} className="text-slate-200" />
           )}
