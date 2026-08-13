@@ -75,7 +75,7 @@ function ProductDetail() {
   const mainImage = getImageUrl(product.images?.[0]) || ''
 
   return (
-    <div className="pb-32 px-4 pt-4 bg-[#F8FAFC] min-h-screen max-w-md mx-auto">
+    <div className="pb-32 px-4 pt-4 bg-[#F8FAFC] min-h-screen">
       {/* HEADER */}
       <header className="flex items-center gap-4 mb-6">
         <button
