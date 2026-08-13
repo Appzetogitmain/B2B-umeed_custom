@@ -76,74 +76,75 @@ function ProductDetail() {
 
   return (
     <div className="pb-32 px-4 pt-4 bg-[#F8FAFC] min-h-screen">
-      {/* HEADER */}
-      <header className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="h-12 w-12 grid place-items-center bg-white rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all"
-        >
-          <ArrowLeft size={20} className="text-slate-600" />
-        </button>
-        <div>
-          <h1 className="text-xl font-extrabold text-[#0F172A] tracking-tight">Product Details</h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">Catalog item</p>
-        </div>
-      </header>
+      <div className="max-w-md mx-auto">
+        {/* HEADER */}
+        <header className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="h-12 w-12 grid place-items-center bg-white rounded-2xl shadow-sm border border-slate-100 active:scale-95 transition-all"
+          >
+            <ArrowLeft size={20} className="text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-xl font-extrabold text-[#0F172A] tracking-tight">Product Details</h1>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">Catalog item</p>
+          </div>
+        </header>
 
-      {/* PRODUCT IMAGE */}
-      <section className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 mb-6">
-        <div className="h-64 w-full bg-slate-50 grid place-items-center relative">
-          {mainImage ? (
-            <img src={mainImage} alt={product.name} className="h-full w-full object-contain p-4" />
-          ) : (
-            <Package size={48} className="text-slate-200" />
-          )}
-          {discount > 0 && (
-            <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] font-black uppercase tracking-wider">
-              {discount}% OFF
+        {/* PRODUCT IMAGE */}
+        <section className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50 mb-6">
+          <div className="h-64 w-full bg-slate-50 grid place-items-center relative">
+            {mainImage ? (
+              <img src={mainImage} alt={product.name} className="h-full w-full object-contain p-4" />
+            ) : (
+              <Package size={48} className="text-slate-200" />
+            )}
+            {discount > 0 && (
+              <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/80 backdrop-blur-md rounded-xl text-white text-[10px] font-black uppercase tracking-wider">
+                {discount}% OFF
+              </div>
+            )}
+          </div>
+
+          {/* Multiple images */}
+          {product.images && product.images.length > 1 && (
+            <div className="flex gap-2 p-4 overflow-x-auto">
+              {product.images.map((img, idx) => (
+                <div key={idx} className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-slate-100">
+                  <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
+                </div>
+              ))}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* Multiple images */}
-        {product.images && product.images.length > 1 && (
-          <div className="flex gap-2 p-4 overflow-x-auto">
-            {product.images.map((img, idx) => (
-              <div key={idx} className="h-16 w-16 shrink-0 rounded-xl overflow-hidden border-2 border-slate-100">
-                <img src={getImageUrl(img)} alt={`${product.name} ${idx + 1}`} className="h-full w-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+        {/* PRODUCT INFO */}
+        <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 mb-6">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{product.category}</p>
+          <h2 className="text-2xl font-black text-[#0F172A] tracking-tight mb-3">{product.name}</h2>
 
-      {/* PRODUCT INFO */}
-      <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50 mb-6">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{product.category}</p>
-        <h2 className="text-2xl font-black text-[#0F172A] tracking-tight mb-3">{product.name}</h2>
-
-        {product.variantName && (
-          <p className="text-xs text-slate-500 font-medium mb-3">Variant: {product.variantName}</p>
-        )}
-
-        <div className="flex items-baseline gap-3 mb-4">
-          <span className="text-3xl font-black text-black">₹{product.price.toLocaleString('en-IN')}</span>
-          {product.mrp > product.price && (
-            <span className="text-lg text-slate-400 line-through font-medium">₹{product.mrp.toLocaleString('en-IN')}</span>
+          {product.variantName && (
+            <p className="text-xs text-slate-500 font-medium mb-3">Variant: {product.variantName}</p>
           )}
-        </div>
 
-        {product.description && (
-          <p className="text-sm text-slate-500 leading-relaxed">{product.description}</p>
-        )}
+          <div className="flex items-baseline gap-3 mb-4">
+            <span className="text-3xl font-black text-black">₹{product.price.toLocaleString('en-IN')}</span>
+            {product.mrp > product.price && (
+              <span className="text-lg text-slate-400 line-through font-medium">₹{product.mrp.toLocaleString('en-IN')}</span>
+            )}
+          </div>
 
-        <div className="flex items-center gap-2 mt-4">
-          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-            }`}>
-            {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
-          </span>
-        </div>
-      </section>
+          {product.description && (
+            <p className="text-sm text-slate-500 leading-relaxed">{product.description}</p>
+          )}
+
+          <div className="flex items-center gap-2 mt-4">
+            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+              }`}>
+              {product.stock > 0 ? `In Stock (${product.stock})` : 'Out of Stock'}
+            </span>
+          </div>
+        </section>
 
       {/* QUANTITY & ADD TO CART */}
       <section className="bg-white rounded-[32px] p-6 shadow-sm border border-slate-50">
@@ -189,6 +190,7 @@ function ProductDetail() {
           )}
         </button>
       </section>
+      </div>
     </div>
   )
 }
