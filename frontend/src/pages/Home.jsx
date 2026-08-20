@@ -417,14 +417,14 @@ function Home() {
             See all <RightIcon size={12} />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex md:flex-wrap gap-3 md:gap-6 overflow-x-auto pb-2 scrollbar-hide">
           {displayedCategories.map((cat, idx) => (
             <button 
               key={`${cat.name}-${idx}`} 
               onClick={() => setSelectedCategory(cat.name)}
-              className="flex flex-col items-center gap-2 shrink-0 w-16 group outline-none"
+              className="flex flex-col items-center gap-2 shrink-0 w-16 md:w-24 group outline-none"
             >
-              <div className={`h-14 w-14 rounded-2xl shadow-sm border transition-all overflow-hidden active:scale-95 grid place-items-center ${
+              <div className={`h-14 w-14 md:h-20 md:w-20 rounded-2xl shadow-sm border transition-all overflow-hidden active:scale-95 grid place-items-center ${
                 selectedCategory === cat.name 
                 ? 'bg-black text-white border-black shadow-md' 
                 : 'bg-white text-slate-600 border-slate-100'
@@ -443,7 +443,7 @@ function Home() {
                   cat.icon
                 )}
               </div>
-              <span className={`text-[9px] font-bold uppercase tracking-tighter text-center leading-tight transition-colors w-full ${
+              <span className={`text-[9px] md:text-[11px] font-bold uppercase tracking-tighter text-center leading-tight transition-colors w-full ${
                 selectedCategory === cat.name ? 'text-black' : 'text-slate-500'
               }`}>
                 {(cat.name || '').split(' | ')[0].split(' - ')[0].split(' & ')[0]}

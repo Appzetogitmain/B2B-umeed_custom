@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import Voucher from '../models/Voucher.js';
 import Retailer from '../models/Retailer.js';
 import WalletTransaction from '../models/WalletTransaction.js';
+import Product from '../models/Product.js';
 
 // Get all orders
 export const getOrders = async (req, res) => {
@@ -59,6 +60,21 @@ export const createOrder = async (req, res) => {
       paymentMethod: paymentMethod || 'COD',
       transactionId: transactionId || ''
     });
+
+    // === DECREMENT PRODUCT STOCK ===
+    try {
+      if (items && items.length > 0) {
+        for (const item of items) {
+          if (item.product && item.quantity) {
+            await Product.findByIdAndUpdate(item.product, {
+              $inc: { stock: -item.quantity }
+            });
+          }
+        }
+      }
+    } catch (stockErr) {
+      console.error('[createOrder] Error updating stock:', stockErr);
+    }
 
     // === AUTO CASHBACK/VOUCHER CALCULATION ===
     try {
@@ -164,6 +180,7 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
+    const previousStatus = order.status;
     order.status = status;
     if (status === 'Rejected') {
       order.rejectionReason = rejectionReason || 'Rejected by Admin';
@@ -172,6 +189,21 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     await order.save();
+
+    // === RESTORE STOCK IF REJECTED ===
+    if (status === 'Rejected' && previousStatus !== 'Rejected') {
+      try {
+        for (const item of order.items) {
+          if (item.product && item.quantity) {
+            await Product.findByIdAndUpdate(item.product, {
+              $inc: { stock: item.quantity }
+            });
+          }
+        }
+      } catch (stockErr) {
+        console.error('[updateOrderStatus] Error restoring stock:', stockErr);
+      }
+    }
 
     const updatedOrder = await Order.findById(id)
       .populate('retailerId')

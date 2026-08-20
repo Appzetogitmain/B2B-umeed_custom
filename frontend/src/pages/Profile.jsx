@@ -1,7 +1,7 @@
-import { getBackendUrl } from '../utils/api';
+import { getBackendUrl, getImageUrl } from '../utils/api';
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Phone, MapPin, Award, UserPlus, Users, LayoutDashboard, LogOut, ChevronRight, ShieldCheck, Settings, X, Copy, Share2, Plus, Trash2, MessageSquare, Pencil } from 'lucide-react'
+import { Phone, MapPin, Award, UserPlus, Users, LayoutDashboard, LogOut, ChevronRight, ShieldCheck, Settings, X, Copy, Share2, Plus, Trash2, MessageSquare, Pencil, CreditCard, FileText, Landmark } from 'lucide-react'
 
 function Profile() {
   const navigate = useNavigate();
@@ -176,9 +176,17 @@ function Profile() {
       {/* USER CARD */}
       <section className="bg-white rounded-[40px] p-8 shadow-sm border border-slate-50 relative overflow-hidden mb-8">
         <div className="flex flex-col items-center gap-4 relative z-10 text-center">
-          <div className={`h-28 w-28 rounded-[36px] grid place-items-center text-4xl font-black text-white shadow-2xl bg-black shadow-black/20`}>
-            {initials}
-          </div>
+          {retailerData?.photo ? (
+            <img 
+              src={getImageUrl(retailerData.photo)} 
+              alt={displayName} 
+              className="h-28 w-28 rounded-[36px] object-cover shadow-2xl shadow-black/20 border-4 border-white"
+            />
+          ) : (
+            <div className={`h-28 w-28 rounded-[36px] grid place-items-center text-4xl font-black text-white shadow-2xl bg-black shadow-black/20`}>
+              {initials}
+            </div>
+          )}
           <div className="mt-2">
             <h2 className="text-2xl font-black text-[#0F172A] leading-tight tracking-tight capitalize">
               {displayName}
@@ -234,6 +242,20 @@ function Profile() {
           />
         </div>
       </section>
+
+      {/* IDENTITY & BANK DETAILS */}
+      {!isDeliveryRoute && (
+        <section className="mb-10 px-2 space-y-4">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Identity & Bank Details</h3>
+          <div className="bg-white rounded-[32px] border border-slate-50 shadow-sm overflow-hidden">
+            <ProfileTab icon={<FileText size={18} />} label="Aadhaar No." value={retailerData?.aadhaarNo || 'Not provided'} />
+            <ProfileTab icon={<CreditCard size={18} />} label="PAN No." value={retailerData?.panNo || 'Not provided'} />
+            <ProfileTab icon={<Landmark size={18} />} label="Bank Name" value={retailerData?.bankName || 'Not provided'} />
+            <ProfileTab icon={<FileText size={18} />} label="Account No." value={retailerData?.accountNo || 'Not provided'} />
+            <ProfileTab icon={<ShieldCheck size={18} />} label="IFSC Code" value={retailerData?.ifscCode || 'Not provided'} />
+          </div>
+        </section>
+      )}
 
       {/* LOGOUT */}
       <button

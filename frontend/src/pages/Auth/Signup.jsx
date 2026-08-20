@@ -44,18 +44,19 @@ function Signup() {
     photo: '',
   })
   const [submitting, setSubmitting] = useState(false)
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false)
   const navigate = useNavigate()
 
   const [error, setError] = useState('')
 
   const handleChange = (event) => {
     let { name, value } = event.target
-    
+
     // Restrict phone fields to numbers only, max 10 digits
     if (name === 'phone' || name === 'whatsappNo' || name === 'alternateContactPhone') {
       value = value.replace(/\D/g, '').substring(0, 10);
     }
-    
+
     setForm((prev) => ({ ...prev, [name]: value }))
     if (error) setError('')
   }
@@ -90,7 +91,7 @@ function Signup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
-      
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -100,7 +101,7 @@ function Signup() {
       setSubmitting(false)
       // Save retailer data dynamically for profile
       localStorage.setItem('umeed-retailer', JSON.stringify(data))
-      
+
       requestNotificationPermission('retailer', data.token)
       navigate('/retailer/home')
     } catch (err) {
@@ -109,10 +110,41 @@ function Signup() {
     }
   }
 
+  const handleCameraSelect = async () => {
+    if (window.flutter_inappwebview) {
+      try {
+        const response = await window.flutter_inappwebview.callHandler('openCamera');
+        if (response && response.success && response.base64) {
+          const mimeType = response.mimeType || 'image/jpeg';
+          const base64Image = `data:${mimeType};base64,${response.base64}`;
+          setForm(prev => ({ ...prev, photo: base64Image }));
+        }
+      } catch (err) {
+        console.error('Camera error:', err);
+        alert('Failed to open camera: ' + err.message);
+      }
+    } else {
+      alert('Camera feature is only available in the Umeed Retailer App.');
+    }
+    setShowPhotoOptions(false);
+  }
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(prev => ({ ...prev, photo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+    setShowPhotoOptions(false);
+  }
+
   return (
     <div className="screen-shell flex h-dvh flex-col overflow-y-auto overflow-x-hidden pb-16 pt-4">
       <section className="brand-gradient rounded-2xl px-5 pb-12 pt-9 text-white shadow-[0_10px_24px_rgba(0,168,119,0.24)]">
-        <button 
+        <button
           onClick={() => navigate('/retailer/auth')}
           className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition-all hover:bg-white/25 active:scale-95 border border-white/10"
           aria-label="Go Back"
@@ -342,7 +374,7 @@ function Signup() {
               placeholder="Official mobile number"
               value={form.phone}
               onChange={handleChange}
-              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0,10) }}
+              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10) }}
               maxLength={10}
               className="input-field"
               required
@@ -377,7 +409,7 @@ function Signup() {
               placeholder="WhatsApp mobile number"
               value={form.whatsappNo}
               onChange={handleChange}
-              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0,10) }}
+              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10) }}
               maxLength={10}
               className="input-field"
             />
@@ -409,7 +441,7 @@ function Signup() {
               placeholder="Alternate mobile number"
               value={form.alternateContactPhone}
               onChange={handleChange}
-              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0,10) }}
+              onInput={(e) => { e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10) }}
               maxLength={10}
               className="input-field"
             />
@@ -715,12 +747,11 @@ function Signup() {
             />
           </div>
 
-          {/* Cloudinary Photo upload field */}
           <div>
             <label className="mb-2 block text-xs font-medium text-slate-600">
               Upload Retailer Photo
             </label>
-            {form.photo && (
+            {form.photo ? (
               <div className="mb-3 relative w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
                 <img src={form.photo} alt="Retailer document" className="w-full h-full object-cover" />
                 <button
@@ -732,22 +763,18 @@ function Signup() {
                   ✕
                 </button>
               </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowPhotoOptions(true)}
+                className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors"
+              >
+                <div className="h-10 w-10 bg-white rounded-full shadow-sm grid place-items-center mb-2 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+                </div>
+                <span className="text-xs font-semibold text-slate-600">Tap to upload photo</span>
+              </button>
             )}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setForm(prev => ({ ...prev, photo: reader.result }));
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-              className="input-field"
-            />
           </div>
 
           <button type="submit" className="primary-btn mt-6" disabled={submitting}>
@@ -762,6 +789,50 @@ function Signup() {
           </Link>
         </p>
       </section>
+
+      {/* Photo Options Modal */}
+      {showPhotoOptions && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in" onClick={() => setShowPhotoOptions(false)} />
+          <div className="relative bg-white rounded-t-3xl p-6 animate-in slide-in-from-bottom-full duration-300">
+            <h3 className="text-base font-black text-slate-800 tracking-tight mb-4 text-center">Upload Photo</h3>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handleCameraSelect}
+                className="w-full p-4 rounded-2xl border-2 border-black bg-black text-white font-bold text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+                Take Photo (Camera)
+              </button>
+
+              <div className="relative w-full">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <button
+                  type="button"
+                  className="w-full p-4 rounded-2xl border-2 border-slate-200 bg-white text-slate-800 font-bold text-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98]"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                  Upload from Gallery
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPhotoOptions(false)}
+                className="w-full p-4 mt-2 text-slate-500 font-bold text-sm uppercase tracking-wider"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -93,7 +93,7 @@ function ProductDetail() {
 
         {/* RESPONSIVE LAYOUT GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          
+
           {/* LEFT COLUMN: PRODUCT IMAGES */}
           <div className="space-y-4">
             <section className="bg-white rounded-[32px] overflow-hidden shadow-sm border border-slate-50">
@@ -198,7 +198,7 @@ function ProductDetail() {
               </button>
             </section>
           </div>
-          
+
         </div>
       </div>
     </div>

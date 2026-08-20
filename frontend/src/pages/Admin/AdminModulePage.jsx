@@ -1353,10 +1353,10 @@ function AdminModulePage() {
       if (!isNaN(mrpNum) && mrpNum > 0) {
         if (prev.discount !== '' && !isNaN(parseFloat(prev.discount))) {
           const discNum = parseFloat(prev.discount);
-          updated.price = Math.round(mrpNum * (1 - discNum / 100));
+          updated.price = parseFloat((mrpNum * (1 - discNum / 100)).toFixed(2));
         } else if (prev.price !== '' && !isNaN(parseFloat(prev.price))) {
           const priceNum = parseFloat(prev.price);
-          const calculatedDiscount = Math.round(((mrpNum - priceNum) / mrpNum) * 100);
+          const calculatedDiscount = parseFloat((((mrpNum - priceNum) / mrpNum) * 100).toFixed(2));
           updated.discount = Math.max(0, calculatedDiscount);
         }
       }
@@ -1370,7 +1370,7 @@ function AdminModulePage() {
       const priceNum = parseFloat(val);
       const mrpNum = parseFloat(prev.mrp);
       if (!isNaN(priceNum) && !isNaN(mrpNum) && mrpNum > 0) {
-        const calculatedDiscount = Math.round(((mrpNum - priceNum) / mrpNum) * 100);
+        const calculatedDiscount = parseFloat((((mrpNum - priceNum) / mrpNum) * 100).toFixed(2));
         updated.discount = Math.max(0, calculatedDiscount);
       }
       return updated;
@@ -1383,7 +1383,7 @@ function AdminModulePage() {
       const discNum = parseFloat(val);
       const mrpNum = parseFloat(prev.mrp);
       if (!isNaN(discNum) && !isNaN(mrpNum) && mrpNum > 0) {
-        const calculatedPrice = Math.round(mrpNum * (1 - discNum / 100));
+        const calculatedPrice = parseFloat((mrpNum * (1 - discNum / 100)).toFixed(2));
         updated.price = calculatedPrice;
       }
       return updated;
@@ -2922,10 +2922,11 @@ function AdminModulePage() {
             </Field>
 
             {/* Photo Upload with preview */}
+            {/* Photo Upload with preview */}
             <Field label="Retailer Photo">
               {retailerForm.photo && (
                 <div className="mb-2 relative w-32 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-                  <img src={retailerForm.photo instanceof File ? URL.createObjectURL(retailerForm.photo) : getImageUrl(retailerForm.photo)} alt="Retailer Document" className="w-full h-full object-cover" />
+                  <img src={retailerForm.photo instanceof File ? URL.createObjectURL(retailerForm.photo) : retailerForm.photo?.startsWith('data:image') ? retailerForm.photo : getImageUrl(retailerForm.photo)} alt="Retailer Document" className="w-full h-full object-cover" />
                   {!isReadOnly && (
                     <button
                       type="button"
@@ -2938,18 +2939,56 @@ function AdminModulePage() {
                   )}
                 </div>
               )}
-              {!isReadOnly && (
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setRetailerForm(prev => ({ ...prev, photo: file }));
-                    }
-                  }}
-                  className={baseInputClass(isReadOnly)}
-                />
+              {!isReadOnly && !retailerForm.photo && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (window.flutter_inappwebview) {
+                        try {
+                          const response = await window.flutter_inappwebview.callHandler('openCamera');
+                          if (response && response.success && response.base64) {
+                             const mimeType = response.mimeType || 'image/jpeg';
+                             const bstr = atob(response.base64);
+                             let n = bstr.length;
+                             const u8arr = new Uint8Array(n);
+                             while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+                             const file = new File([u8arr], response.fileName || 'retailer_camera.jpg', {type:mimeType});
+                             setRetailerForm(prev => ({ ...prev, photo: file }));
+                          }
+                        } catch(err) {
+                          alert('Failed to open camera: ' + err.message);
+                        }
+                      } else {
+                        alert('Camera feature is only available in the Umeed App.');
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 p-3 border border-black rounded-xl bg-black text-white text-xs font-bold hover:bg-slate-800 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    Take Photo
+                  </button>
+                  <div className="relative flex-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setRetailerForm(prev => ({ ...prev, photo: file }));
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      className="w-full flex items-center justify-center gap-2 p-3 border border-slate-300 rounded-xl bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors pointer-events-none"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                      From Gallery
+                    </button>
+                  </div>
+                </div>
               )}
             </Field>
           </div>
@@ -3274,6 +3313,7 @@ function AdminModulePage() {
                       type="number"
                       required
                       min="0"
+                      step="0.01"
                       readOnly={isReadOnly}
                       value={productForm.price}
                       onChange={(e) => handlePriceChange(e.target.value)}
@@ -3290,6 +3330,7 @@ function AdminModulePage() {
                       type="number"
                       required
                       min="0"
+                      step="0.01"
                       readOnly={isReadOnly}
                       value={productForm.mrp}
                       onChange={(e) => handleMrpChange(e.target.value)}
@@ -3306,6 +3347,7 @@ function AdminModulePage() {
                       type="number"
                       min="0"
                       max="100"
+                      step="0.01"
                       readOnly={isReadOnly}
                       value={productForm.discount}
                       onChange={(e) => handleDiscountChange(e.target.value)}
