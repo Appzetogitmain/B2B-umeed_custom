@@ -70,11 +70,8 @@ export const processAndSaveImage = async (buffer, type, options = {}) => {
     // Save the file
     await sharpInstance.toFile(filepath);
 
-    // Get the base backend URL
-    const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5200}`;
-
-    // Return the absolute URL format
-    return `${backendUrl}/images/${type}/${year}/${month}/${filename}`;
+    // Return the relative URL format (Best practice for DB storage)
+    return `/images/${type}/${year}/${month}/${filename}`;
   } catch (error) {
     console.error('Error processing image:', error);
     throw new Error('Image processing failed');
