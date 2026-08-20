@@ -92,7 +92,18 @@ function Signup() {
         body: JSON.stringify(payload)
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get("content-type");
+      let data;
+      
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        // Extract title if it's an HTML error from Nginx (like 413 Payload Too Large)
+        const match = text.match(/<title>(.*?)<\/title>/i);
+        const errorMsg = match ? match[1] : 'Server returned an invalid HTML response';
+        throw new Error(`Server Error: ${errorMsg}. Please check server limits.`);
+      }
 
       if (!response.ok) {
         throw new Error(data.message || 'Something went wrong')
