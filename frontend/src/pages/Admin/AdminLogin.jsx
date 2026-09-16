@@ -35,7 +35,7 @@ function AdminLogin() {
       const data = await response.json()
 
       if (response.ok) {
-        localStorage.setItem('umeed-admin-auth', 'true')
+        localStorage.setItem('umeed-admin-auth', JSON.stringify(data))
         localStorage.setItem('umeed-admin-email', data.email)
         localStorage.setItem('umeed-admin-token', data.token)
         navigate('/admin/dashboard', { replace: true })
@@ -60,55 +60,54 @@ function AdminLogin() {
           <p className="mt-1 text-sm text-gray-500">Admin Panel Access</p>
         </div>
 
-        <div className="mt-5">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gray-500">ADMIN ACCESS</p>
-          <h1 className="mt-2 text-2xl font-semibold text-black">Admin Login</h1>
-          <p className="mt-1 text-sm text-gray-500">Login to access your dashboard</p>
+        <form onSubmit={handleSubmit} className="mt-8">
+          <div className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Email Address</label>
+              <div className="relative">
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  autoFocus
+                  placeholder="admin@umeed.com"
+                  value={credentials.email}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-[15px] outline-none transition-colors focus:border-black focus:ring-1 focus:ring-black"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
+              <div className="relative">
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  placeholder="••••••••"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-[15px] outline-none transition-colors focus:border-black focus:ring-1 focus:ring-black"
+                />
+              </div>
+            </div>
+          </div>
 
           {error && (
-            <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-500 border border-red-200">
-              {error}
+            <div className="mt-4 rounded-md bg-red-50 p-3">
+              <p className="text-sm font-medium text-red-800">{error}</p>
             </div>
           )}
 
-          <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="mb-2 block text-xs font-medium text-gray-600">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={credentials.email}
-                onChange={handleChange}
-                placeholder="admin@umeed.com"
-                className="h-[44px] w-full rounded-[8px] border border-[#d1d5db] bg-white px-3 text-[14px] text-gray-700 outline-none transition-colors duration-200 placeholder-[#9ca3af] focus:border-black"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="mb-2 block text-xs font-medium text-gray-600">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={credentials.password}
-                onChange={handleChange}
-                placeholder="Enter password"
-                className="h-[44px] w-full rounded-[8px] border border-[#d1d5db] bg-white px-3 text-[14px] text-gray-700 outline-none transition-colors duration-200 placeholder-[#9ca3af] focus:border-black"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="h-[44px] w-full rounded-[8px] bg-black px-4 text-[14px] font-medium text-white transition-opacity duration-200 hover:opacity-90 disabled:opacity-50"
-            >
-              {isLoading ? 'Logging in...' : 'Login to Admin Panel'}
-            </button>
-          </form>
-        </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-6 w-full rounded-lg bg-black px-4 py-3 text-[15px] font-semibold text-white transition-all hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Authenticating...' : 'Sign In'}
+          </button>
+        </form>
       </div>
     </div>
   )

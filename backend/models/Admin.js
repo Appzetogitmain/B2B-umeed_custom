@@ -21,7 +21,10 @@ const adminSchema = new mongoose.Schema({
     type: String,
     enum: ['SuperAdmin', 'Admin'],
     default: 'SuperAdmin'
-  }
+  },
+  permissions: [{
+    type: String
+  }]
 }, {
   timestamps: true
 });

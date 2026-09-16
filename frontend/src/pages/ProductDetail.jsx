@@ -38,7 +38,11 @@ function ProductDetail() {
       price: product.price,
       originalPrice: product.mrp,
       image: getImageUrl(product.images?.[0]) || '',
-      category: product.category
+      category: product.category,
+      stock: product.stock,
+      deliveryFee: product.deliveryFee || 0,
+      platformFee: product.platformFee || 0,
+      gst: product.gst || 0
     }
     for (let i = 0; i < quantity; i++) {
       addToCart(cartItem)

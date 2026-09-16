@@ -8,6 +8,7 @@ export const adminSidebarSections = [
     items: [
       { label: 'Retailer Management', path: 'retailers', icon: 'retailers' },
       { label: 'Delivery Partners', path: 'delivery-partners', icon: 'retailers' },
+      { label: 'Store Management', path: 'stores', icon: 'products' },
       { label: 'Category Management', path: 'categories', icon: 'products' },
       { label: 'Banner Management', path: 'banners', icon: 'products' },
       { label: 'Product & Pricing', path: 'products-pricing', icon: 'products' },
@@ -52,6 +53,14 @@ export const adminModuleContent = {
       'Upload promotional images to Cloudinary dynamically',
       'Edit banner details and delete inactive banners'
     ]
+  },
+  stores: {
+    title: 'Store Management',
+    subtitle: 'Manage central hubs, super hubs, and dark stores.',
+    points: [
+      'Create and manage Centralised stores, Super Hubs, and Dark Stores',
+      'Track hierarchy and city mappings',
+    ],
   },
   retailers: {
     title: 'Retailer Management',

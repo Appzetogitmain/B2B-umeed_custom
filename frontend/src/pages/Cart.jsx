@@ -11,7 +11,7 @@ function formatCurrency(value) {
 
 
 function Cart() {
-  const { cartItems, totalPrice, increaseQuantity, decreaseQuantity, removeItem, clearCart } = useCart()
+  const { cartItems, totalPrice, subtotal, totalDeliveryFee, totalPlatformFee, totalGST, increaseQuantity, decreaseQuantity, removeItem, clearCart } = useCart()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const isCheckoutOpen = searchParams.get('checkout') === 'true'
@@ -49,13 +49,32 @@ function Cart() {
         return;
       }
 
-      const items = cartItems.map(i => ({
-        product: i.id,
-        quantity: i.quantity,
-        price: i.price,
-        mrp: i.originalPrice || i.price,
-        name: i.name
-      }));
+      const items = cartItems.map(i => {
+        const mrp = i.originalPrice || i.price;
+        const price = i.price;
+        let discount = i.discount;
+        
+        // If discount is a string like "10% OFF" from UI, parse it.
+        // Otherwise, calculate dynamically if mrp > price
+        if (typeof discount === 'string') {
+          discount = parseInt(discount.replace(/\D/g, '')) || 0;
+        } else if (!discount && mrp > price) {
+          discount = Math.round(((mrp - price) / mrp) * 100);
+        }
+
+        return {
+          product: i.id,
+          quantity: i.quantity,
+          price: price,
+          mrp: mrp,
+          discount: discount || 0,
+          name: i.name,
+          deliveryFee: i.deliveryFee || 0,
+          platformFee: i.platformFee || 0,
+          gst: i.gst || 0,
+          gstAmount: (price * ((i.gst || 0) / 100))
+        }
+      });
 
       const orderPayload = {
         retailerId,
@@ -298,6 +317,37 @@ function Cart() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Fee Breakdown */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-slate-500">Subtotal</span>
+                <span className="text-xs font-black text-slate-800">{formatCurrency(subtotal || 0)}</span>
+              </div>
+              {(totalDeliveryFee || 0) > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-500">Delivery Fee</span>
+                  <span className="text-xs font-black text-slate-800">{formatCurrency(totalDeliveryFee || 0)}</span>
+                </div>
+              )}
+              {(totalPlatformFee || 0) > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-500">Platform Fee</span>
+                  <span className="text-xs font-black text-slate-800">{formatCurrency(totalPlatformFee || 0)}</span>
+                </div>
+              )}
+              {(totalGST || 0) > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-500">GST</span>
+                  <span className="text-xs font-black text-slate-800">{formatCurrency(totalGST || 0)}</span>
+                </div>
+              )}
+              <div className="h-px bg-slate-200 my-2" />
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-black text-slate-800">Grand Total</span>
+                <span className="text-sm font-black text-emerald-600">{formatCurrency(totalPrice || 0)}</span>
               </div>
             </div>
           </div>

@@ -24,9 +24,14 @@ function CartProvider({ children }) {
         id: product.id, 
         name: product.name, 
         price: product.price, 
+        originalPrice: product.originalPrice || product.price,
+        discount: product.discount || 0,
         quantity: 1, 
         image: product.image,
-        stock: product.stock || 100 // fallback stock if undefined
+        stock: product.stock || 100, // fallback stock if undefined
+        deliveryFee: product.deliveryFee || 0,
+        platformFee: product.platformFee || 0,
+        gst: product.gst || 0
       }]
     })
   }
@@ -63,15 +68,35 @@ function CartProvider({ children }) {
 
   const totals = useMemo(() => {
     const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-    const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+    
+    const totalDeliveryFee = cartItems.reduce((sum, item) => sum + ((item.deliveryFee || 0) * item.quantity), 0)
+    const totalPlatformFee = cartItems.reduce((sum, item) => sum + ((item.platformFee || 0) * item.quantity), 0)
+    const totalGST = cartItems.reduce((sum, item) => {
+      const itemGstAmount = (item.price * ((item.gst || 0) / 100))
+      return sum + (itemGstAmount * item.quantity)
+    }, 0)
 
-    return { totalItems, totalPrice }
+    const grandTotal = subtotal + totalDeliveryFee + totalPlatformFee + totalGST
+
+    return { 
+      totalItems, 
+      subtotal,
+      totalDeliveryFee,
+      totalPlatformFee,
+      totalGST,
+      grandTotal 
+    }
   }, [cartItems])
 
   const value = {
     cartItems,
     totalItems: totals.totalItems,
-    totalPrice: totals.totalPrice,
+    totalPrice: totals.grandTotal, // Expose grandTotal as totalPrice for backwards compatibility
+    subtotal: totals.subtotal,
+    totalDeliveryFee: totals.totalDeliveryFee,
+    totalPlatformFee: totals.totalPlatformFee,
+    totalGST: totals.totalGST,
     addToCart,
     increaseQuantity,
     decreaseQuantity,

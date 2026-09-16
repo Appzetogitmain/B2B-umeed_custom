@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { adminModuleContent } from '../../data/adminModules'
 import AdminDealManagement from '../../components/AdminDealManagement'
+import AdminRolesManagement from '../../components/AdminRolesManagement'
 import { Printer, Camera, UploadCloud, Image as ImageIcon } from 'lucide-react'
 
 function getStatusBadgeClasses(status) {
@@ -151,6 +152,9 @@ const productInitialForm = {
   price: '',
   mrp: '',
   discount: '',
+  deliveryFee: '',
+  platformFee: '',
+  gst: '',
   stock: '',
   packetSize: '1',
   cartonSize: '1',
@@ -729,6 +733,7 @@ function BulkUploadModal({ onClose, onSuccess, categories }) {
 function AdminModulePage() {
   const { module } = useParams()
   const content = adminModuleContent[module]
+  const isStoreModule = module === 'stores'
   const isRetailerModule = module === 'retailers'
   const isDeliveryModule = module === 'delivery-partners'
   const isCategoryModule = module === 'categories'
@@ -745,6 +750,7 @@ function AdminModulePage() {
   const isDealModule = module === 'deal-management'
 
   const [targetList, setTargetList] = useState([])
+  const [stores, setStores] = useState([])
   const [retailers, setRetailers] = useState([])
   const [partners, setPartners] = useState([])
   const [categories, setCategories] = useState([])
@@ -763,6 +769,11 @@ function AdminModulePage() {
   const [newStockValue, setNewStockValue] = useState(0)
   const [inventorySearch, setInventorySearch] = useState('')
 
+  const [transferProduct, setTransferProduct] = useState(null)
+  const [transferForm, setTransferForm] = useState({ fromLocation: '', toLocation: '', quantity: '' })
+  const [transferError, setTransferError] = useState('')
+  const [isTransferring, setIsTransferring] = useState(false)
+
   const [policies, setPolicies] = useState([])
   const [settlements, setSettlements] = useState([])
   const [commissionForm, setCommissionForm] = useState(commissionInitialForm)
@@ -780,6 +791,7 @@ function AdminModulePage() {
   const [paymentSearch, setPaymentSearch] = useState('')
 
 
+  const [storeForm, setStoreForm] = useState({ name: '', storeType: 'Dark Store', city: '', address: '', status: 'Active' })
   const [retailerForm, setRetailerForm] = useState(retailerInitialForm)
   const [partnerForm, setPartnerForm] = useState(partnerInitialForm)
   const [categoryForm, setCategoryForm] = useState({ categoryName: '', image: '' })
@@ -905,6 +917,23 @@ function AdminModulePage() {
       (product.description && product.description.toLowerCase().includes(q))
     )
   })
+
+  useEffect(() => {
+    if (isStoreModule || isInventoryModule) {
+      fetchStores()
+    }
+  }, [isStoreModule, isInventoryModule])
+
+  const fetchStores = async () => {
+    try {
+      const response = await fetch(`${getBackendUrl()}/api/v1/stores`)
+      if (!response.ok) throw new Error('Failed to fetch stores')
+      const data = await response.json()
+      setStores(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   useEffect(() => {
     if (isRetailerModule) {
@@ -1242,6 +1271,9 @@ function AdminModulePage() {
           price: row.price || '',
           mrp: row.mrp || '',
           discount: row.discount || '',
+          deliveryFee: row.deliveryFee || '',
+          platformFee: row.platformFee || '',
+          gst: row.gst || '',
           stock: row.stock || '',
           packetSize: row.packetSize || '1',
           cartonSize: row.cartonSize || '1',
@@ -1839,6 +1871,43 @@ function AdminModulePage() {
       alert(err.message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleTransferStock = async (e) => {
+    e.preventDefault()
+    if (!transferProduct) return
+    if (!transferForm.fromLocation || !transferForm.toLocation || transferForm.quantity <= 0) {
+      setTransferError('Please fill all fields with valid quantity')
+      return
+    }
+
+    try {
+      setIsTransferring(true)
+      const response = await fetch(`${getBackendUrl()}/api/v1/products/transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: transferProduct._id,
+          fromLocation: transferForm.fromLocation,
+          toLocation: transferForm.toLocation,
+          quantity: Number(transferForm.quantity)
+        })
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to transfer stock')
+      }
+
+      await fetchProducts()
+      setTransferProduct(null)
+      setTransferForm({ fromLocation: '', toLocation: '', quantity: '' })
+      setTransferError('')
+    } catch (err) {
+      console.error('Stock transfer error:', err)
+      setTransferError(err.message)
+    } finally {
+      setIsTransferring(false)
     }
   }
 
@@ -2454,6 +2523,232 @@ function AdminModulePage() {
     )
   }
 
+  if (isStoreModule) {
+    return (
+      <div className="space-y-4">
+        <header className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-800">Store Management</h1>
+            <p className="mt-1 text-sm text-slate-500">Manage Centralised stores, Super Hubs, and Dark Stores</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setStoreForm({ name: '', storeType: 'Dark Store', city: '', address: '', status: 'Active' });
+              setSearchParams({ action: 'add' });
+            }}
+            className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+          >
+            + Add Store
+          </button>
+        </header>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+          <h2 className="text-base font-semibold text-slate-900">Stores Directory</h2>
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50">
+                <tr>
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">Store Name</th>
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">Type</th>
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">City</th>
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">Address</th>
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">Status</th>
+                  <th className="px-3 py-2.5 font-semibold text-slate-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {stores.map((store) => (
+                  <tr key={store._id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3 font-medium text-slate-800">{store.name}</td>
+                    <td className="px-3 py-3 text-slate-700">
+                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${store.storeType === 'Centralised' ? 'bg-purple-50 text-purple-700 border border-purple-100' : store.storeType === 'Super Hub' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
+                        {store.storeType}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-slate-700">{store.city}</td>
+                    <td className="px-3 py-3 text-slate-700">{store.address || 'N/A'}</td>
+                    <td className="px-3 py-3">
+                      <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${getStatusBadgeClasses(store.status)}`}>
+                        {store.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStoreForm(store);
+                            setSearchParams({ action: 'edit', id: store._id });
+                          }}
+                          className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm('Delete this store?')) return;
+                            try {
+                              await fetch(`${getBackendUrl()}/api/v1/stores/${store._id}`, { method: 'DELETE' });
+                              fetchStores();
+                            } catch (err) { console.error(err); }
+                          }}
+                          className="rounded-lg border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {stores.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="py-8 text-center text-slate-400">
+                      No stores found. Click "+ Add Store" to create one.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+              <header className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {modalMode === 'edit' ? 'Edit Store' : 'Add New Store'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({})}
+                  className="text-slate-400 hover:text-slate-600 text-lg font-bold"
+                >
+                  ✕
+                </button>
+              </header>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                try {
+                  const url = modalMode === 'edit' ? `${getBackendUrl()}/api/v1/stores/${selectedId}` : `${getBackendUrl()}/api/v1/stores`;
+                  const method = modalMode === 'edit' ? 'PUT' : 'POST';
+                  const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(storeForm)
+                  });
+                  if (res.ok) {
+                    fetchStores();
+                    setSearchParams({});
+                  } else {
+                    const data = await res.json();
+                    alert(data.message || 'Error saving store');
+                  }
+                } catch (err) {
+                  alert('Server error');
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }} className="mt-4 space-y-4">
+                
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Store Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={storeForm.name}
+                    onChange={(e) => setStoreForm({ ...storeForm, name: e.target.value })}
+                    placeholder="E.g. Indore Central"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Store Type
+                  </label>
+                  <select
+                    value={storeForm.storeType}
+                    onChange={(e) => setStoreForm({ ...storeForm, storeType: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                  >
+                    <option value="Centralised">Centralised</option>
+                    <option value="Super Hub">Super Hub</option>
+                    <option value="Dark Store">Dark Store</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    City (Location)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={storeForm.city}
+                    onChange={(e) => setStoreForm({ ...storeForm, city: e.target.value })}
+                    placeholder="E.g. Indore"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Address (Optional)
+                  </label>
+                  <textarea
+                    value={storeForm.address}
+                    onChange={(e) => setStoreForm({ ...storeForm, address: e.target.value })}
+                    placeholder="Full address of the store"
+                    rows="2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Status
+                  </label>
+                  <select
+                    value={storeForm.status}
+                    onChange={(e) => setStoreForm({ ...storeForm, status: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setSearchParams({})}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Store'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (isRetailerModule) {
     return (
       <div className="space-y-4">
@@ -2601,6 +2896,29 @@ function AdminModulePage() {
                 className={baseInputClass(isReadOnly)}
                 placeholder="E.g. Mohan General Store"
                 required
+              />
+            </Field>
+
+            <Field label="City">
+              <input
+                value={isReadOnly ? (retailerForm.city || 'N/A') : retailerForm.city}
+                onChange={(e) => setRetailerForm((prev) => ({ ...prev, city: e.target.value }))}
+                readOnly={isReadOnly}
+                className={baseInputClass(isReadOnly)}
+                placeholder="E.g. Indore, Bhopal"
+                required
+              />
+            </Field>
+
+            <Field label="Address">
+              <textarea
+                value={isReadOnly ? (retailerForm.address || retailerForm.deliveryAddress || 'N/A') : retailerForm.address}
+                onChange={(e) => setRetailerForm((prev) => ({ ...prev, address: e.target.value, deliveryAddress: e.target.value }))}
+                readOnly={isReadOnly}
+                className={baseInputClass(isReadOnly)}
+                placeholder="Full store address"
+                required
+                rows="2"
               />
             </Field>
 
@@ -3146,7 +3464,55 @@ function AdminModulePage() {
                   </div>
                 </div>
 
-                <div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Delivery Fee (Rs)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      readOnly={isReadOnly}
+                      value={productForm.deliveryFee}
+                      onChange={(e) => setProductForm({ ...productForm, deliveryFee: e.target.value })}
+                      placeholder="Delivery Fee"
+                      className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none ${isReadOnly ? 'cursor-default bg-slate-100 text-slate-500' : ''}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Platform Fee (Rs)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      readOnly={isReadOnly}
+                      value={productForm.platformFee}
+                      onChange={(e) => setProductForm({ ...productForm, platformFee: e.target.value })}
+                      placeholder="Platform Fee"
+                      className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none ${isReadOnly ? 'cursor-default bg-slate-100 text-slate-500' : ''}`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                      GST (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      readOnly={isReadOnly}
+                      value={productForm.gst}
+                      onChange={(e) => setProductForm({ ...productForm, gst: e.target.value })}
+                      placeholder="GST %"
+                      className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none ${isReadOnly ? 'cursor-default bg-slate-100 text-slate-500' : ''}`}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
                     Product Description
                   </label>
@@ -4013,16 +4379,28 @@ function AdminModulePage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedInventoryProduct(product)
-                              setNewStockValue(product.stock || 0)
-                            }}
-                            className="rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 px-3.5 py-1.5 text-xs font-bold text-emerald-700 transition active:scale-95"
-                          >
-                            ✏️ Adjust Stock
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedInventoryProduct(product)
+                                setNewStockValue(product.stock || 0)
+                              }}
+                              className="rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-300 px-3.5 py-1.5 text-xs font-bold text-emerald-700 transition active:scale-95"
+                            >
+                              ✏️ Adjust Stock
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTransferProduct(product);
+                                setTransferForm({ fromLocation: '', toLocation: '', quantity: '' });
+                              }}
+                              className="rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 px-3.5 py-1.5 text-xs font-bold text-blue-700 transition active:scale-95"
+                            >
+                              🔄 Transfer Stock
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
@@ -4167,6 +4545,106 @@ function AdminModulePage() {
                     className="rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 px-5 py-2.5 text-sm font-bold text-white transition shadow-sm flex items-center gap-2"
                   >
                     {isSubmitting ? 'Syncing...' : '✓ Persist Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Transfer Stock Modal */}
+        {transferProduct && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <h3 className="text-lg font-bold text-slate-800">Transfer Stock</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferProduct(null)
+                    setTransferForm({ fromLocation: '', toLocation: '', quantity: '' })
+                    setTransferError('')
+                  }}
+                  className="h-8 w-8 text-slate-400 hover:text-slate-600 rounded-lg flex items-center justify-center font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {transferError && (
+                <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 border border-rose-100">
+                  {transferError}
+                </div>
+              )}
+
+              <form onSubmit={handleTransferStock} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    From Location
+                  </label>
+                  <select
+                    required
+                    value={transferForm.fromLocation}
+                    onChange={(e) => setTransferForm({ ...transferForm, fromLocation: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition"
+                  >
+                    <option value="">Select Source Location</option>
+                    <option value="Global">Global (Main Pool)</option>
+                    {stores.map(store => (
+                      <option key={store._id} value={store.city}>{store.name} ({store.storeType} - {store.city})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    To Location
+                  </label>
+                  <select
+                    required
+                    value={transferForm.toLocation}
+                    onChange={(e) => setTransferForm({ ...transferForm, toLocation: e.target.value })}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition"
+                  >
+                    <option value="">Select Destination Location</option>
+                    <option value="Global">Global (Main Pool)</option>
+                    {stores.map(store => (
+                      <option key={store._id} value={store.city}>{store.name} ({store.storeType} - {store.city})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={transferForm.quantity}
+                    onChange={(e) => setTransferForm({ ...transferForm, quantity: e.target.value })}
+                    placeholder="Enter quantity to transfer"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none focus:border-blue-500 focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransferProduct(null)
+                      setTransferForm({ fromLocation: '', toLocation: '', quantity: '' })
+                      setTransferError('')
+                    }}
+                    className="rounded-xl border border-slate-200 hover:bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-600 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isTransferring}
+                    className="rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-5 py-2.5 text-sm font-bold text-white transition shadow-sm"
+                  >
+                    {isTransferring ? 'Transferring...' : 'Confirm Transfer'}
                   </button>
                 </div>
               </form>
@@ -5959,36 +6437,53 @@ function AdminModulePage() {
       ) : null}
 
       {isSettingsModule && (
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
-          <h2 className="text-base font-semibold text-slate-900">Security Settings</h2>
-          <p className="mt-1 text-sm text-slate-500">Update admin account password.</p>
+        <>
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+            <h2 className="text-base font-semibold text-slate-900">Security Settings</h2>
+            <p className="mt-1 text-sm text-slate-500">Update admin account password.</p>
 
-          <form onSubmit={handleUpdateAdminPassword} className="mt-4 max-w-sm">
-            <label className="block mb-2 text-sm font-medium text-slate-700">New Password</label>
-            <input
-              type="password"
-              value={adminPassword}
-              onChange={(e) => {
-                setAdminPassword(e.target.value)
-                setPasswordUpdateMessage({ type: '', text: '' })
-              }}
-              placeholder="Enter new password"
-              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 mb-3"
-            />
-            {passwordUpdateMessage.text && (
-              <p className={`text-sm mb-3 ${passwordUpdateMessage.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>
-                {passwordUpdateMessage.text}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={isUpdatingPassword}
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {isUpdatingPassword ? 'Updating...' : 'Update Password'}
-            </button>
-          </form>
-        </section>
+            <form onSubmit={handleUpdateAdminPassword} className="mt-4 max-w-sm">
+              <label className="block mb-2 text-sm font-medium text-slate-700">New Password</label>
+              <input
+                type="password"
+                value={adminPassword}
+                onChange={(e) => {
+                  setAdminPassword(e.target.value)
+                  setPasswordUpdateMessage({ type: '', text: '' })
+                }}
+                placeholder="Enter new password"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-emerald-500 mb-3"
+              />
+              {passwordUpdateMessage.text && (
+                <p className={`text-sm mb-3 ${passwordUpdateMessage.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>
+                  {passwordUpdateMessage.text}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={isUpdatingPassword}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+              </button>
+            </form>
+          </section>
+
+          {/* Render Roles Management only if SuperAdmin */}
+          {(() => {
+            const rawAuth = localStorage.getItem('umeed-admin-auth');
+            let isSuperAdmin = false;
+            try {
+              if (rawAuth === 'true') {
+                isSuperAdmin = true;
+              } else {
+                const parsed = JSON.parse(rawAuth || '{}');
+                isSuperAdmin = parsed.role === 'SuperAdmin';
+              }
+            } catch (e) {}
+            return isSuperAdmin && <AdminRolesManagement />;
+          })()}
+        </>
       )}
     </div>
   )

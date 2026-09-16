@@ -74,9 +74,10 @@ function Home() {
   const [dealMessage, setDealMessage] = useState('')
   const [isSubmittingDeal, setIsSubmittingDeal] = useState(false)
 
-  // Get logged-in retailer name from localStorage
+  // Get logged-in retailer data from localStorage
   const retailerData = JSON.parse(localStorage.getItem('umeed-retailer') || '{}')
   const retailerName = retailerData?.name || 'Umeed Retailer'
+  const retailerCity = retailerData?.city || ''
 
   useEffect(() => {
     const fetchCats = async () => {
@@ -124,7 +125,7 @@ function Home() {
     const fetchProducts = async () => {
       setIsLoadingProducts(true);
       try {
-        const url = `${getBackendUrl()}/api/v1/products`
+        const url = `${getBackendUrl()}/api/v1/products${retailerCity ? `?location=${encodeURIComponent(retailerCity)}` : ''}`
         const res = await fetch(url)
         if (res.ok) {
           const data = await res.json()
@@ -139,7 +140,10 @@ function Home() {
               originalPrice: p.mrp,
               discount: p.discount ? `${p.discount}% OFF` : '',
               image: p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
-              stock: p.stock
+              stock: p.stock,
+              deliveryFee: p.deliveryFee || 0,
+              platformFee: p.platformFee || 0,
+              gst: p.gst || 0
             })))
           }
         }

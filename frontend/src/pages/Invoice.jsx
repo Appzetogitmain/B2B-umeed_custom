@@ -65,6 +65,14 @@ export default function Invoice() {
   });
 
   const subtotal = order.items?.reduce((acc, item) => acc + (item.price * item.quantity), 0) || 0;
+  
+  const totalDeliveryFee = order.items?.reduce((acc, item) => acc + ((item.deliveryFee || 0) * item.quantity), 0) || 0;
+  const totalPlatformFee = order.items?.reduce((acc, item) => acc + ((item.platformFee || 0) * item.quantity), 0) || 0;
+  const totalGST = order.items?.reduce((acc, item) => {
+    const gstAmt = item.gstAmount !== undefined ? item.gstAmount : (item.price * ((item.gst || 0) / 100));
+    return acc + (gstAmt * item.quantity);
+  }, 0) || 0;
+
   const totalDiscount = order.items?.reduce((acc, item) => {
     const itemTotalMRP = item.mrp * item.quantity;
     const itemTotalSelling = item.price * item.quantity;
@@ -166,7 +174,7 @@ export default function Invoice() {
                   <td className="py-4 px-4 text-slate-500 text-center">{index + 1}</td>
                   <td className="py-4 px-4">
                     <p className="font-bold text-slate-900">{item.name}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Discount: {item.discount || 0}%</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Retail Profit: {item.discount || 0}% ({formatCurrency((item.mrp - item.price) * item.quantity)})</p>
                   </td>
                   <td className="py-4 px-4 text-right text-slate-500 line-through text-xs">
                     {formatCurrency(item.mrp)}
@@ -193,6 +201,24 @@ export default function Invoice() {
               <span className="text-slate-500 font-medium">Subtotal</span>
               <span className="font-bold text-slate-900">{formatCurrency(subtotal)}</span>
             </div>
+            {totalDeliveryFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500 font-medium">Delivery Fee</span>
+                <span className="font-bold text-slate-900">{formatCurrency(totalDeliveryFee)}</span>
+              </div>
+            )}
+            {totalPlatformFee > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500 font-medium">Platform Fee</span>
+                <span className="font-bold text-slate-900">{formatCurrency(totalPlatformFee)}</span>
+              </div>
+            )}
+            {totalGST > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500 font-medium">GST</span>
+                <span className="font-bold text-slate-900">{formatCurrency(totalGST)}</span>
+              </div>
+            )}
             {totalDiscount > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500 font-medium">Total Discount Saved</span>

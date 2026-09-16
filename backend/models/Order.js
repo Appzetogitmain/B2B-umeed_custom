@@ -27,6 +27,22 @@ const orderItemSchema = new mongoose.Schema({
   discount: {
     type: Number,
     default: 0
+  },
+  deliveryFee: {
+    type: Number,
+    default: 0
+  },
+  platformFee: {
+    type: Number,
+    default: 0
+  },
+  gst: {
+    type: Number,
+    default: 0
+  },
+  gstAmount: {
+    type: Number,
+    default: 0
   }
 });
 

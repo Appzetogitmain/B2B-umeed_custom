@@ -8,10 +8,35 @@ const getBufferFromBase64 = (base64Str) => {
   return Buffer.from(base64Data, 'base64');
 };
 
+const processProductsLocationStock = (products, targetLocation) => {
+  return products.map(p => {
+    const pObj = p.toObject ? p.toObject() : p;
+    
+    // If targetLocation is specified, filter stock
+    if (targetLocation && pObj.inventory && pObj.inventory.length > 0) {
+      const locInv = pObj.inventory.find(i => i.location.toLowerCase() === targetLocation.toLowerCase());
+      pObj.stock = locInv ? locInv.stock : 0;
+    } else {
+      // Global stock calculation (sum of all or legacy stock)
+      if (pObj.inventory && pObj.inventory.length > 0) {
+        pObj.stock = pObj.inventory.reduce((sum, inv) => sum + inv.stock, 0);
+      }
+    }
+
+    const cSize = pObj.cartonSize || 1;
+    const stockVal = pObj.stock || 0;
+    
+    pObj.is_carton_available = cSize > 1 && stockVal > 0 && (stockVal % cSize === 0);
+    pObj.carton_count = pObj.is_carton_available ? Math.floor(stockVal / cSize) : 0;
+    
+    return pObj;
+  });
+};
+
 // Get all products
 export const getProducts = async (req, res) => {
   try {
-    const { search, page, limit } = req.query;
+    const { search, page, limit, location } = req.query;
     let query = {};
     if (search) {
       query = {
@@ -21,6 +46,12 @@ export const getProducts = async (req, res) => {
           { category: { $regex: search, $options: 'i' } }
         ]
       };
+    }
+
+    if (location) {
+      // Find products that have this location in their inventory array with stock > 0
+      query['inventory.location'] = new RegExp('^' + location + '$', 'i');
+      query['inventory.stock'] = { $gt: 0 };
     }
 
     if (page && limit) {
@@ -34,8 +65,10 @@ export const getProducts = async (req, res) => {
         .skip(skip)
         .limit(limitNum);
 
+      const processedProducts = processProductsLocationStock(products, location);
+
       return res.json({
-        products,
+        products: processedProducts,
         total,
         page: pageNum,
         totalPages: Math.ceil(total / limitNum)
@@ -43,20 +76,8 @@ export const getProducts = async (req, res) => {
     }
 
     const products = await Product.find(query).sort({ createdAt: -1 });
-    
-    // Add dynamic carton details based on database values
-    const productsWithCartonInfo = products.map(p => {
-      const pObj = p.toObject();
-      const cSize = pObj.cartonSize || 1;
-      const stockVal = pObj.stock || 0;
-      
-      pObj.is_carton_available = cSize > 1 && stockVal > 0 && (stockVal % cSize === 0);
-      pObj.carton_count = pObj.is_carton_available ? Math.floor(stockVal / cSize) : 0;
-      
-      return pObj;
-    });
-
-    res.json(productsWithCartonInfo);
+    const processedProducts = processProductsLocationStock(products, location);
+    res.json(processedProducts);
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ message: 'Error fetching products' });
@@ -90,7 +111,7 @@ export const getProductById = async (req, res) => {
 // Create Product
 export const createProduct = async (req, res) => {
   try {
-    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description, packetSize, cartonSize } = req.body;
+    const { name, category, variantName, images, existingImages, price, mrp, discount, deliveryFee, platformFee, gst, stock, description, packetSize, cartonSize } = req.body;
 
     if (!name || !category || price === undefined || mrp === undefined || stock === undefined) {
       return res.status(400).json({ message: 'Please provide all required fields' });
@@ -144,6 +165,20 @@ export const createProduct = async (req, res) => {
       }
     }
 
+    let parsedInventory = [];
+    if (req.body.inventory) {
+      try {
+        parsedInventory = typeof req.body.inventory === 'string' ? JSON.parse(req.body.inventory) : req.body.inventory;
+      } catch (err) {
+        console.error('Error parsing inventory', err);
+      }
+    }
+
+    // Ensure we keep stock in sync with inventory for legacy support
+    const totalStock = parsedInventory.length > 0 
+      ? parsedInventory.reduce((sum, item) => sum + Number(item.stock || 0), 0)
+      : Number(stock);
+
     const product = await Product.create({
       name,
       category,
@@ -151,10 +186,14 @@ export const createProduct = async (req, res) => {
       images: uploadedImages,
       price: Number(price),
       mrp: Number(mrp),
-      discount: Number(discount || 0),
-      stock: Number(stock),
-      packetSize: packetSize !== undefined ? Number(packetSize) : 1,
-      cartonSize: cartonSize !== undefined ? Number(cartonSize) : 1,
+      discount: discount ? Number(discount) : 0,
+      deliveryFee: deliveryFee ? Number(deliveryFee) : 0,
+      platformFee: platformFee ? Number(platformFee) : 0,
+      gst: gst ? Number(gst) : 0,
+      stock: totalStock,
+      inventory: parsedInventory,
+      packetSize: packetSize ? Number(packetSize) : 1,
+      cartonSize: cartonSize ? Number(cartonSize) : 1,
       description: description || '',
     });
 
@@ -169,7 +208,7 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, variantName, images, existingImages, price, mrp, discount, stock, description, packetSize, cartonSize } = req.body;
+    const { name, category, variantName, images, existingImages, price, mrp, discount, deliveryFee, platformFee, gst, stock, description, packetSize, cartonSize } = req.body;
 
     const product = await Product.findById(id);
     if (!product) {
@@ -235,6 +274,19 @@ export const updateProduct = async (req, res) => {
       deleteImage(removedImg);
     }
 
+    let parsedInventory = product.inventory;
+    if (req.body.inventory) {
+      try {
+        parsedInventory = typeof req.body.inventory === 'string' ? JSON.parse(req.body.inventory) : req.body.inventory;
+      } catch (err) {
+        console.error('Error parsing inventory', err);
+      }
+    }
+
+    const totalStock = parsedInventory.length > 0
+      ? parsedInventory.reduce((sum, item) => sum + Number(item.stock || 0), 0)
+      : (stock !== undefined ? Number(stock) : product.stock);
+
     product.name = name || product.name;
     product.category = category || product.category;
     product.variantName = variantName !== undefined ? variantName : product.variantName;
@@ -242,7 +294,11 @@ export const updateProduct = async (req, res) => {
     product.price = price !== undefined ? Number(price) : product.price;
     product.mrp = mrp !== undefined ? Number(mrp) : product.mrp;
     product.discount = discount !== undefined ? Number(discount) : product.discount;
-    product.stock = stock !== undefined ? Number(stock) : product.stock;
+    product.deliveryFee = deliveryFee !== undefined ? Number(deliveryFee) : product.deliveryFee;
+    product.platformFee = platformFee !== undefined ? Number(platformFee) : product.platformFee;
+    product.gst = gst !== undefined ? Number(gst) : product.gst;
+    product.inventory = parsedInventory;
+    product.stock = totalStock;
     product.packetSize = packetSize !== undefined ? Number(packetSize) : product.packetSize;
     product.cartonSize = cartonSize !== undefined ? Number(cartonSize) : product.cartonSize;
     product.description = description !== undefined ? description : product.description;
@@ -276,6 +332,63 @@ export const deleteProduct = async (req, res) => {
   } catch (error) {
     console.error('Delete product error:', error);
     res.status(500).json({ message: 'Error deleting product' });
+  }
+};
+
+// Transfer Stock Between Locations
+export const transferStock = async (req, res) => {
+  try {
+    const { productId, fromLocation, toLocation, quantity } = req.body;
+    
+    if (!productId || !fromLocation || !toLocation || !quantity || quantity <= 0) {
+      return res.status(400).json({ message: 'Invalid transfer details' });
+    }
+    
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    const qty = Number(quantity);
+    
+    // Initialize inventory if missing
+    if (!product.inventory) product.inventory = [];
+    
+    // Special case: if fromLocation is 'Global' or 'Base', transfer from global stock to specific location
+    // Find from location
+    const fromInvIndex = product.inventory.findIndex(i => i.location.toLowerCase() === fromLocation.toLowerCase());
+    
+    if (fromInvIndex === -1 || product.inventory[fromInvIndex].stock < qty) {
+      // If no inventory array matches but total stock is enough, assume it's unassigned stock
+      if (fromLocation.toLowerCase() === 'global' || product.inventory.length === 0) {
+         if (product.stock < qty) {
+           return res.status(400).json({ message: `Insufficient unassigned stock` });
+         }
+      } else {
+        return res.status(400).json({ message: `Insufficient stock in ${fromLocation}` });
+      }
+    } else {
+      // Deduct stock from fromLocation
+      product.inventory[fromInvIndex].stock -= qty;
+    }
+    
+    // Add stock to toLocation
+    const toInvIndex = product.inventory.findIndex(i => i.location.toLowerCase() === toLocation.toLowerCase());
+    if (toInvIndex !== -1) {
+      product.inventory[toInvIndex].stock += qty;
+    } else {
+      product.inventory.push({ location: toLocation, stock: qty });
+    }
+    
+    // Recalculate total stock
+    product.stock = product.inventory.reduce((sum, item) => sum + item.stock, 0);
+    
+    const updatedProduct = await product.save();
+    
+    res.json({ message: 'Stock transferred successfully', product: updatedProduct });
+  } catch (error) {
+    console.error('Stock transfer error:', error);
+    res.status(500).json({ message: 'Error transferring stock' });
   }
 };
 
@@ -349,6 +462,9 @@ export const createProductsBulk = async (req, res) => {
         price: Number(prod.price),
         mrp: Number(prod.mrp),
         discount: Number(prod.discount || 0),
+        deliveryFee: Number(prod.deliveryFee || 0),
+        platformFee: Number(prod.platformFee || 0),
+        gst: Number(prod.gst || 0),
         stock: Number(prod.stock),
         packetSize: prod.packetSize !== undefined ? Number(prod.packetSize) : 1,
         cartonSize: prod.cartonSize !== undefined ? Number(prod.cartonSize) : 1,

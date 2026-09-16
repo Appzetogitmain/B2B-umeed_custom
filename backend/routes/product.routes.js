@@ -6,7 +6,8 @@ import {
   updateProduct,
   deleteProduct,
   updateProductStock,
-  createProductsBulk
+  createProductsBulk,
+  transferStock
 } from '../controllers/product.controller.js';
 import { protect } from '../middlewares/auth.js';
 import { upload } from '../utils/imageUpload.js';
@@ -19,6 +20,7 @@ router.get('/:id', getProductById);
 
 // Protected - admin only operations
 router.post('/bulk', protect, createProductsBulk);
+router.post('/transfer', protect, transferStock);
 router.post('/', protect, upload.array('images', 5), createProduct);
 router.put('/:id/stock', protect, updateProductStock);
 router.put('/:id', protect, upload.array('images', 5), updateProduct);

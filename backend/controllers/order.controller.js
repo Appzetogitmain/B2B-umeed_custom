@@ -63,12 +63,26 @@ export const createOrder = async (req, res) => {
 
     // === DECREMENT PRODUCT STOCK ===
     try {
+      const retailer = await Retailer.findById(retailerId);
+      const retailerLocation = retailer?.city || '';
+
       if (items && items.length > 0) {
         for (const item of items) {
           if (item.product && item.quantity) {
-            await Product.findByIdAndUpdate(item.product, {
-              $inc: { stock: -item.quantity }
-            });
+            const product = await Product.findById(item.product);
+            if (product) {
+              // Deduct global stock
+              product.stock -= item.quantity;
+              
+              // Deduct location specific stock if available
+              if (retailerLocation && product.inventory && product.inventory.length > 0) {
+                const locIndex = product.inventory.findIndex(i => i.location.toLowerCase() === retailerLocation.toLowerCase());
+                if (locIndex !== -1) {
+                  product.inventory[locIndex].stock -= item.quantity;
+                }
+              }
+              await product.save();
+            }
           }
         }
       }

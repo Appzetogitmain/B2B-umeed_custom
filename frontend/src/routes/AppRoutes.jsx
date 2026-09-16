@@ -109,7 +109,8 @@ function AppRoutes() {
 function SmartRedirect() {
   const isRetailerLoggedIn = !!localStorage.getItem('umeed-retailer')
   const isDeliveryLoggedIn = localStorage.getItem('umeed-delivery-auth') === 'true'
-  const isAdminLoggedIn = localStorage.getItem('umeed-admin-auth') === 'true'
+  const adminAuth = localStorage.getItem('umeed-admin-auth');
+  const isAdminLoggedIn = adminAuth === 'true' || (adminAuth && adminAuth.includes('{'));
 
   if (isRetailerLoggedIn) return <Navigate to="/retailer/home" replace />
   if (isDeliveryLoggedIn) return <Navigate to="/delivery/home" replace />
@@ -118,7 +119,8 @@ function SmartRedirect() {
 }
 
 function AdminAuthRoute() {
-  const isAdminLoggedIn = localStorage.getItem('umeed-admin-auth') === 'true'
+  const auth = localStorage.getItem('umeed-admin-auth');
+  const isAdminLoggedIn = auth === 'true' || (auth && auth.includes('{'));
   if (isAdminLoggedIn) return <Navigate to="/admin/dashboard" replace />
   return <AdminLogin />
 }

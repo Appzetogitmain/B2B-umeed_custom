@@ -40,6 +40,22 @@ export const adminOnly = async (req, res, next) => {
   }
 };
 
+// SuperAdmin only middleware
+export const superAdminOnly = async (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    try {
+      const adminUser = await Admin.findById(req.user.id);
+      if (adminUser && adminUser.role === 'SuperAdmin') {
+        req.adminUser = adminUser;
+        return next();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  return res.status(403).json({ message: 'Access denied. SuperAdmin only.' });
+};
+
 // Retailer only middleware
 export const retailerOnly = async (req, res, next) => {
   if (req.user && (req.user.role === 'retailer' || req.user.role === 'admin')) {

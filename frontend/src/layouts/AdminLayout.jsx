@@ -214,6 +214,33 @@ function AdminLayout() {
     navigate('/admin/auth', { replace: true })
   }
 
+  let adminAuth = null;
+  try {
+    const rawAuth = localStorage.getItem('umeed-admin-auth');
+    if (rawAuth === 'true') {
+      adminAuth = { role: 'SuperAdmin' }; // Backward compatibility
+    } else {
+      adminAuth = JSON.parse(rawAuth || 'null');
+    }
+  } catch(e) {
+    console.error('Error parsing admin auth', e);
+  }
+  
+  const hasPermission = (path) => {
+    if (!adminAuth) return false;
+    if (adminAuth.role === 'SuperAdmin') return true;
+    if (path === 'dashboard') return true; // Dashboard is allowed for all
+    if (path === 'settings') return false; // Settings is SuperAdmin only for now
+    
+    // Check if the permission matches the path or path:read (backward compatibility)
+    return adminAuth.permissions && (adminAuth.permissions.includes(path) || adminAuth.permissions.includes(`${path}:read`));
+  };
+
+  const filteredSidebarSections = adminSidebarSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => hasPermission(item.path))
+  })).filter(section => section.items.length > 0);
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* FIXED SIDEBAR - SCROLLABLE */}
@@ -230,7 +257,7 @@ function AdminLayout() {
         {/* Sidebar Menu - Scrollable */}
         <nav className={`flex-1 overflow-y-auto py-3 transition-all duration-300 ease-in-out ${collapsed ? 'px-2' : 'px-4'}`}>
           <div className="space-y-6">
-            {adminSidebarSections.map((section) => (
+            {filteredSidebarSections.map((section) => (
               <div key={section.title} className="space-y-2">
                 {!collapsed ? (
                   <p className="px-2 text-xs font-medium uppercase tracking-wide text-gray-400">{section.title}</p>

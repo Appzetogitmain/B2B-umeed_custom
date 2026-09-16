@@ -15,6 +15,8 @@ function Signup() {
     businessDocumentType: '',
     businessDocumentPhoto: '',
     photo: '',
+    city: '',
+    deliveryAddress: '',
   })
   const [submitting, setSubmitting] = useState(false)
   const [showPhotoOptions, setShowPhotoOptions] = useState(false)
@@ -202,6 +204,36 @@ function Signup() {
               type="text"
               placeholder="E.g. Mohan General Store"
               value={form.shopName}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 focus:border-[#00a877] focus:outline-none focus:ring-1 focus:ring-[#00a877]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="city" className="mb-2 block text-sm font-medium text-slate-600">
+              City
+            </label>
+            <input
+              id="city"
+              name="city"
+              type="text"
+              placeholder="E.g. Indore, Bhopal"
+              value={form.city}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 focus:border-[#00a877] focus:outline-none focus:ring-1 focus:ring-[#00a877]"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="deliveryAddress" className="mb-2 block text-sm font-medium text-slate-600">
+              Delivery Address
+            </label>
+            <textarea
+              id="deliveryAddress"
+              name="deliveryAddress"
+              placeholder="Full address of your store"
+              rows="2"
+              value={form.deliveryAddress}
               onChange={handleChange}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 focus:border-[#00a877] focus:outline-none focus:ring-1 focus:ring-[#00a877]"
             />

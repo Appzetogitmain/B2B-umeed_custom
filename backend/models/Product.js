@@ -32,11 +32,27 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  deliveryFee: {
+    type: Number,
+    default: 0,
+  },
+  platformFee: {
+    type: Number,
+    default: 0,
+  },
+  gst: {
+    type: Number,
+    default: 0,
+  },
   stock: {
     type: Number,
     required: true,
     default: 0,
   },
+  inventory: [{
+    location: { type: String, required: true },
+    stock: { type: Number, required: true, default: 0 }
+  }],
   packetSize: {
     type: Number,
     default: 1

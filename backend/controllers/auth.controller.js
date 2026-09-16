@@ -13,7 +13,7 @@ export const registerRetailer = async (req, res) => {
       partnerNameA, partnerNameB, phone, whatsappNo, alternateContactName, alternateContactPhone,
       areaOfOperation, pinCode, state, gstNumber, bankName, ifscCode, bankBranch,
       accountHolderName, accountNo, retailShopName, completeAddress, landmark, policeStation,
-      addressPinCode, addressState, photo, businessDocumentType, businessDocumentPhoto
+      addressPinCode, addressState, photo, businessDocumentType, businessDocumentPhoto, city
     } = req.body;
 
     // Validation
@@ -72,7 +72,7 @@ export const registerRetailer = async (req, res) => {
       ownerName: name,
       storeName: shopName || retailShopName || '',
       phone: phone || '',
-      city: landmark || '',
+      city: city || landmark || '',
       gstNumber: gstNumber || '',
       shopName: shopName || '',
       shopType: shopType || '',
@@ -529,7 +529,10 @@ export const updateAdminRetailer = async (req, res) => {
     if (retailShopName !== undefined) retailer.retailShopName = retailShopName;
     if (completeAddress !== undefined) {
       retailer.completeAddress = completeAddress;
-      retailer.deliveryAddress = completeAddress;
+      // Only overwrite deliveryAddress if address wasn't provided or if completeAddress has a value
+      if (!address && completeAddress) {
+        retailer.deliveryAddress = completeAddress;
+      }
     }
     if (landmark !== undefined) retailer.landmark = landmark;
     if (policeStation !== undefined) retailer.policeStation = policeStation;
@@ -681,6 +684,7 @@ export const loginAdmin = async (req, res) => {
         name: admin.name,
         email: admin.email,
         role: admin.role,
+        permissions: admin.permissions || [],
         token,
         message: 'Admin logged in successfully'
       });

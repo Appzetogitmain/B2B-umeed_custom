@@ -20,7 +20,8 @@ import paymentRoutes from './routes/payment.routes.js';
 import targetRoutes from './routes/target.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import dealRoutes from './routes/deal.routes.js';
-
+import adminRoutes from './routes/admin.routes.js';
+import storeRoutes from './routes/store.routes.js';
 
 // Load env vars
 dotenv.config();
@@ -111,6 +112,8 @@ app.use('/api/v1/targets', targetRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/deals', dealRoutes);
+app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/stores', storeRoutes);
 
 const PORT = process.env.PORT || 5200;
 

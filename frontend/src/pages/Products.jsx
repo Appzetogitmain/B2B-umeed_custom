@@ -41,7 +41,10 @@ function Products() {
               originalPrice: p.mrp,
               discount: p.discount ? `${p.discount}% OFF` : '',
               image: p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=300',
-              stock: p.stock
+              stock: p.stock,
+              deliveryFee: p.deliveryFee || 0,
+              platformFee: p.platformFee || 0,
+              gst: p.gst || 0
             })))
           }
         }
