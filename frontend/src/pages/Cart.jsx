@@ -113,7 +113,7 @@ function Cart() {
         if (!rzpData.id) throw new Error('Razorpay Order generation failed');
 
         const options = {
-          key: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_RAZORPAY_KEY_ID) ? import.meta.env.VITE_RAZORPAY_KEY_ID : 'rzp_test_S3IcSS1NbymL6D', // safely access env in Vite
+          key: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_RAZORPAY_KEY_ID) ? import.meta.env.VITE_RAZORPAY_KEY_ID : 'rzp_live_SGiQh6Ko1jbpze', // safely access env in Vite
           amount: rzpData.amount,
           currency: rzpData.currency,
           name: "Umeed B2B",
